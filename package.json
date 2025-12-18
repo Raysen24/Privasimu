@@ -1,0 +1,21 @@
+{
+  "name": "privasimu-starter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:dev --prefix frontend\" \"npm:dev --prefix server\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:server": "npm run dev --prefix server",
+    "install-all": "npm install --prefix frontend && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.6.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-quill": "^2.0.0",
+    "zustand": "^5.0.8"
+  }
+}
