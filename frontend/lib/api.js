@@ -178,7 +178,6 @@ const getActionFromStatus = (status) => {
     case 'Needs Revision':
       return 'Edit.Submit';
     case 'Pending Review':
-    case 'Pending Approval':
     case 'Pending Publish':
       return 'View';
     case 'Published':

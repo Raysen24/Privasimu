@@ -5,6 +5,8 @@ import Layout from '../components/Layout'
 import { SearchProvider } from '../contexts/SearchContext'
 import { AuthProvider, useAuth } from '../contexts/AuthContext'
 import { useRouter } from 'next/router'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function AppContent({ Component, pageProps }) {
   const { isLoggedIn, isLoading } = useAuth()
@@ -36,7 +38,12 @@ function AppContent({ Component, pageProps }) {
 
   // Show login page without layout
   if (router.pathname === '/login') {
-    return <Component {...pageProps} />
+    return (
+      <>
+        <Component {...pageProps} />
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss pauseOnHover />
+      </>
+    )
   }
 
   // Show other pages with layout
@@ -45,6 +52,7 @@ function AppContent({ Component, pageProps }) {
       <Layout>
         <Component {...pageProps} />
       </Layout>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss pauseOnHover />
     </SearchProvider>
   )
 }
