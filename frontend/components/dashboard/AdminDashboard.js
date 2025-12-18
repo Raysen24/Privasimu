@@ -25,6 +25,12 @@ import {
   CartesianGrid,
   Legend
 } from 'recharts';
+const normalizeStatus = (status) => {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+};
 
 const AdminDashboard = () => {
   const { user, isAdmin } = useAuth();
@@ -67,7 +73,8 @@ const AdminDashboard = () => {
     const snap = await getDocs(q);
     const data = [];
     snap.forEach((d) => {
-      if (d.id !== user.uid && ['reviewer', 'admin'].includes(d.data().role)) {
+      const role = String(d.data().role || "").toLowerCase();
+      if (d.id !== user?.uid && ["reviewer", "admin"].includes(role)) {
         data.push({ id: d.id, ...d.data() });
       }
     });
@@ -95,9 +102,10 @@ const AdminDashboard = () => {
     regulations.forEach((r) => {
       if (!r.updatedAt?.toDate) return;
       const monthIndex = r.updatedAt.toDate().getMonth();
+      const s = normalizeStatus(r.status);
 
-      if (r.status === 'published') months[monthIndex].published++;
-      if (r.status === 'rejected' || r.status === 'needs_revision')
+      if (s === 'published') months[monthIndex].published++;
+      if (s === 'rejected' || s === 'needs_revision')
         months[monthIndex].rejected++;
     });
 
@@ -113,16 +121,23 @@ const AdminDashboard = () => {
   };
 
   const getStatusBadge = (status) => {
+    const key = normalizeStatus(status);
     const map = {
       draft: 'bg-gray-100 text-gray-800',
       pending_review: 'bg-yellow-100 text-yellow-800',
       under_review: 'bg-blue-100 text-blue-800',
+      pending_publish: 'bg-blue-100 text-blue-800',
+      pending_approval: 'bg-blue-100 text-blue-800',
       needs_revision: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800',
       published: 'bg-green-100 text-green-800'
     };
+
+    const label = String(status || '—').replace(/_/g, ' ');
+
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded ${map[status]}`}>
-        {status.replace('_', ' ')}
+      <span className={`px-2 py-1 text-xs font-medium rounded ${map[key] || 'bg-gray-100 text-gray-800'}`}>
+        {label}
       </span>
     );
   };
@@ -153,7 +168,7 @@ const AdminDashboard = () => {
       await updateDoc(ref, {
         assignedReviewer: selectedReviewer,
         assignedReviewerName: reviewer.data().name || 'Reviewer',
-        status: 'pending_review',
+        status: 'Pending Review',
         updatedAt: new Date()
       });
 
@@ -175,7 +190,7 @@ const AdminDashboard = () => {
       const ref = doc(db, 'regulations', selectedRegulation.id);
       const now = new Date();
       await updateDoc(ref, {
-        status: 'published',
+        status: 'Published',
         adminNotes: adminNotes,
         publishedAt: now,
         updatedAt: now
@@ -200,7 +215,7 @@ const AdminDashboard = () => {
       const ref = doc(db, 'regulations', selectedRegulation.id);
       const now = new Date();
       await updateDoc(ref, {
-        status: 'needs_revision',
+        status: 'Needs Revision',
         adminNotes: adminNotes,
         deniedAt: now,
         updatedAt: now
@@ -443,7 +458,7 @@ const AdminDashboard = () => {
                       Edit
                     </button>
 
-                    {r.status === 'draft' && (
+                    {normalizeStatus(r.status) === 'draft' && (
                       <button
                         onClick={() => {
                           setSelectedRegulation(r);

@@ -6,10 +6,16 @@ import { collection, query, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 
+const normalizeStatus = (status) => {
+  return String(status || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+};
 const ITEMS_PER_PAGE = 8;
 
 const ActionsNeeded = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
   const router = useRouter();
 
   const [regulations, setRegulations] = useState([]);
@@ -21,10 +27,18 @@ const ActionsNeeded = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && user) {
-      fetchRegulations();
+    if (isLoading) return;
+    if (!user) {
+      router.push('/login');
+      return;
     }
-  }, [isLoading, user]);
+    if (!isAdmin || !isAdmin()) {
+      router.push('/unauthorized');
+      return;
+    }
+    fetchRegulations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, user, isAdmin, router]);
 
   const fetchRegulations = async () => {
     try {
@@ -60,17 +74,23 @@ const ActionsNeeded = () => {
   };
 
   const getStatusBadge = (status) => {
+    const key = normalizeStatus(status);
     const map = {
       draft: 'bg-gray-100 text-gray-800',
       pending_review: 'bg-yellow-100 text-yellow-800',
       under_review: 'bg-blue-100 text-blue-800',
+      pending_publish: 'bg-blue-100 text-blue-800',
+      pending_approval: 'bg-blue-100 text-blue-800',
       needs_revision: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800',
       published: 'bg-green-100 text-green-800'
     };
 
+    const label = String(status || '—').replace(/_/g, ' ');
+
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded ${map[status]}`}>
-        {status.replace('_', ' ')}
+      <span className={`px-2 py-1 text-xs font-medium rounded ${map[key] || 'bg-gray-100 text-gray-800'}`}>
+        {label}
       </span>
     );
   };
@@ -92,10 +112,12 @@ const ActionsNeeded = () => {
 
     try {
       setSubmitting(true);
+      const now = new Date();
       await updateDoc(doc(db, 'regulations', selectedRegulation.id), {
-        status: 'published',
+        status: 'Published',
         adminNotes: notes,
-        publishedAt: new Date()
+        publishedAt: now,
+        updatedAt: now
       });
 
       toast.success('Regulation published successfully!');
@@ -115,10 +137,12 @@ const ActionsNeeded = () => {
 
     try {
       setSubmitting(true);
+      const now = new Date();
       await updateDoc(doc(db, 'regulations', selectedRegulation.id), {
-        status: 'needs_revision',
+        status: 'Needs Revision',
         adminNotes: notes,
-        deniedAt: new Date()
+        deniedAt: now,
+        updatedAt: now
       });
 
       toast.info('Regulation marked for revision');
