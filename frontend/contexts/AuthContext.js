@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+ 
   // Check authentication status on mount
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -49,19 +50,14 @@ export const AuthProvider = ({ children }) => {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('user', JSON.stringify(userData));
             
-            // Redirect to appropriate dashboard after successful login
+            // Only redirect when at /login or exactly /dashboard.
+            // Do NOT force-redirect when already on other /dashboard/* pages
             if (router.pathname === '/login' || router.pathname === '/dashboard') {
               const dashboardPath = getDashboardPath(userData.role);
               console.log('Redirecting to:', dashboardPath);
               router.push(dashboardPath);
-            } else if (router.pathname.startsWith('/dashboard/')) {
-              // If already on a dashboard, ensure it's the correct one for the user's role
-              const dashboardPath = getDashboardPath(userData.role);
-              if (router.pathname !== dashboardPath) {
-                console.log('Redirecting to correct dashboard:', dashboardPath);
-                router.push(dashboardPath);
-              }
             }
+
           } else {
             console.log('No user data found, signing out');
             await firebaseSignOut(auth);
