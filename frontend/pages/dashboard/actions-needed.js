@@ -3,16 +3,17 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearch } from '../../contexts/SearchContext';
 import { db } from '../../lib/firebase';
-import { collection, query, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 
 const normalizeStatus = (status) => {
-  return String(status || "")
+  return String(status || '')
     .trim()
     .toLowerCase()
-    .replace(/\s+/g, "_");
+    .replace(/\s+/g, '_');
 };
+
 const ITEMS_PER_PAGE = 8;
 
 const ActionsNeeded = () => {
@@ -23,10 +24,6 @@ const ActionsNeeded = () => {
   const [regulations, setRegulations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedRegulation, setSelectedRegulation] = useState(null);
-  const [viewMode, setViewMode] = useState(false); // true = view only, false = edit mode
-  const [notes, setNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // Reset to page 1 when search term changes
   useEffect(() => {
@@ -56,11 +53,10 @@ const ActionsNeeded = () => {
       snap.forEach((d) => {
         const regulationData = { id: d.id, ...d.data() };
         const status = normalizeStatus(regulationData.status);
-        // Filter out drafts - admins typically don't need to see drafts unless they're assigned
-        // Drafts are usually only visible to the employee who created them
-        if (status === 'draft') {
-          return; // Skip drafts
-        }
+
+        // Admins generally don't need Drafts (owned by employee)
+        if (status === 'draft') return;
+
         data.push(regulationData);
       });
       setRegulations(data);
@@ -75,10 +71,8 @@ const ActionsNeeded = () => {
      FILTERED REGULATIONS (based on search)
   ----------------------------- */
   const filteredRegulations = useMemo(() => {
-    if (!searchTerm || !searchTerm.trim()) {
-      return regulations;
-    }
-    
+    if (!searchTerm || !searchTerm.trim()) return regulations;
+
     const term = searchTerm.toLowerCase().trim();
     return regulations.filter((r) => {
       const title = (r.title || '').toLowerCase();
@@ -88,7 +82,7 @@ const ActionsNeeded = () => {
       const content = (r.content || '').toLowerCase();
       const ref = (r.ref || r.refNumber || r.referenceNo || '').toLowerCase();
       const adminNotes = (r.adminNotes || '').toLowerCase();
-      
+
       return (
         title.includes(term) ||
         category.includes(term) ||
@@ -118,35 +112,23 @@ const ActionsNeeded = () => {
     if (!date) return 'No deadline set';
     try {
       let dateObj;
-      // Handle Firestore Timestamp
+
+      // Firestore Timestamp
       if (date && typeof date.toDate === 'function') {
         dateObj = date.toDate();
-      }
-      // Handle Firestore timestamp with _seconds
-      else if (date && date._seconds && typeof date._seconds === 'number') {
+      } else if (date && date._seconds && typeof date._seconds === 'number') {
         dateObj = new Date(date._seconds * 1000);
-      }
-      // Handle Firestore timestamp with seconds
-      else if (date && date.seconds && typeof date.seconds === 'number') {
+      } else if (date && date.seconds && typeof date.seconds === 'number') {
         dateObj = new Date(date.seconds * 1000);
-      }
-      // Handle Date object
-      else if (date instanceof Date) {
+      } else if (date instanceof Date) {
         dateObj = date;
-      }
-      // Handle string or number
-      else {
+      } else {
         dateObj = new Date(date);
       }
-      
-      if (!dateObj || isNaN(dateObj.getTime())) {
-        console.warn('Invalid date format:', date);
-        return 'No deadline set';
-      }
-      
+
+      if (!dateObj || isNaN(dateObj.getTime())) return 'No deadline set';
       return format(dateObj, 'MMM d, yyyy');
     } catch (e) {
-      console.error('Error formatting date:', e, date);
       return 'No deadline set';
     }
   };
@@ -167,238 +149,27 @@ const ActionsNeeded = () => {
     const label = String(status || '—').replace(/_/g, ' ');
 
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded ${map[key] || 'bg-gray-100 text-gray-800'}`}>
+      <span
+        className={`px-2 py-1 text-xs font-medium rounded ${
+          map[key] || 'bg-gray-100 text-gray-800'
+        }`}
+      >
         {label}
       </span>
     );
   };
 
-  const handleEditClick = (regulation) => {
-    setSelectedRegulation(regulation);
-    setViewMode(false);
-    setNotes('');
-  };
-
-  const handleViewClick = (regulation) => {
-    setSelectedRegulation(regulation);
-    setViewMode(true);
-    setNotes('');
-  };
-
-  const handlePublish = async () => {
-    if (!selectedRegulation) return;
-
-    try {
-      setSubmitting(true);
-      const now = new Date();
-      await updateDoc(doc(db, 'regulations', selectedRegulation.id), {
-        status: 'Published',
-        adminNotes: notes,
-        publishedAt: now,
-        updatedAt: now
-      });
-
-      toast.success('Regulation published successfully!');
-      setSelectedRegulation(null);
-      setNotes('');
-      fetchRegulations();
-    } catch (e) {
-      toast.error('Failed to publish regulation');
-      console.error(e);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeny = async () => {
-    if (!selectedRegulation) return;
-
-    try {
-      setSubmitting(true);
-      const now = new Date();
-      await updateDoc(doc(db, 'regulations', selectedRegulation.id), {
-        status: 'Needs Revision',
-        adminNotes: notes,
-        deniedAt: now,
-        updatedAt: now
-      });
-
-      toast.info('Regulation marked for revision');
-      setSelectedRegulation(null);
-      setNotes('');
-      fetchRegulations();
-    } catch (e) {
-      toast.error('Failed to update regulation');
-      console.error(e);
-    } finally {
-      setSubmitting(false);
-    }
+  const openInAdminDashboard = (regulation, mode) => {
+    router.push({
+      pathname: '/dashboard/admin',
+      query: { id: regulation.id, mode, from: 'actions-needed' }
+    });
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin h-12 w-12 border-t-2 border-blue-500 rounded-full" />
-      </div>
-    );
-  }
-
-  // DETAIL VIEW (both view and edit modes)
-  if (selectedRegulation) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <button
-          onClick={() => setSelectedRegulation(null)}
-          className="mb-6 px-4 py-2 text-blue-600 hover:text-blue-800 font-medium"
-        >
-          ← Back to List
-        </button>
-
-        <div className="grid grid-cols-3 gap-6">
-          {/* Left: Regulation Details */}
-          <div className="col-span-2 bg-white rounded-lg border p-6">
-            <h2 className="text-2xl font-bold mb-4">{selectedRegulation.title}</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-semibold text-gray-700">Category</label>
-                <p className="text-gray-900">{selectedRegulation.category || 'N/A'}</p>
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-gray-700">Status</label>
-                <div className="mt-1">{getStatusBadge(selectedRegulation.status)}</div>
-              </div>
-
-              {selectedRegulation.status !== 'Published' && (
-                <div>
-                  {(() => {
-                    const status = String(selectedRegulation.status || '').toLowerCase().trim();
-                    if (status === 'published' || status === 'publish') {
-                      return null;
-                    }
-                    // Check for revision deadline first if status is "Needs Revision"
-                    const deadline = (status === 'needs revision' || status === 'needs_revision') && selectedRegulation.revisionDeadline
-                      ? selectedRegulation.revisionDeadline
-                      : selectedRegulation.deadline;
-                    const formatted = formatDate(deadline);
-                    if (formatted === 'No deadline set') return null;
-                    
-                    return (
-                      <>
-                        <label className="text-sm font-semibold text-gray-700">Deadline Assigned</label>
-                        <p className="text-gray-900">{formatted}</p>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-
-              <div>
-                <label className="text-sm font-semibold text-gray-700">Description</label>
-                {selectedRegulation.description ? (
-                  <div 
-                    className="text-gray-900 mt-1"
-                    style={{ wordWrap: 'break-word' }}
-                    dangerouslySetInnerHTML={{ __html: selectedRegulation.description }}
-                  />
-                ) : (
-                  <p className="text-gray-500">N/A</p>
-                )}
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-gray-700">Content</label>
-                {selectedRegulation.content ? (
-                  <div 
-                    className="text-gray-900 mt-1"
-                    style={{ wordWrap: 'break-word' }}
-                    dangerouslySetInnerHTML={{ __html: selectedRegulation.content }}
-                  />
-                ) : (
-                  <p className="text-gray-500">N/A</p>
-                )}
-              </div>
-
-              {/* Reviewer Feedback */}
-              {(selectedRegulation.feedback || selectedRegulation.reviewerFeedback) && (
-                <div>
-                  <label className="text-sm font-semibold text-gray-700">
-                    Reviewer Feedback
-                  </label>
-                  <div className="mt-1 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-gray-900 whitespace-pre-wrap">
-                      {selectedRegulation.feedback || selectedRegulation.reviewerFeedback || 'N/A'}
-                    </p>
-                    {selectedRegulation.reviewedBy && (
-                      <p className="text-xs text-gray-500 mt-2">
-                        Reviewed by: {selectedRegulation.reviewerName || selectedRegulation.reviewedBy}
-                        {selectedRegulation.reviewedAt && (
-                          <span className="ml-2">
-                            on {formatDate(selectedRegulation.reviewedAt)}
-                          </span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right: Notes & Actions */}
-          <div className="col-span-1 bg-white rounded-lg border p-6">
-            <h3 className="text-lg font-semibold mb-4">Admin Notes</h3>
-
-            {viewMode ? (
-              // VIEW MODE - Read-only
-              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 min-h-40">
-                <p className="text-gray-900 whitespace-pre-wrap">
-                  {selectedRegulation.adminNotes || 'No notes added'}
-                </p>
-              </div>
-            ) : (
-              // EDIT MODE - Editable textarea
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add your notes here..."
-                rows={10}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-              />
-            )}
-
-            <div className="space-y-3 mt-6">
-              {!viewMode && (
-                <>
-                  <button
-                    onClick={handlePublish}
-                    disabled={submitting}
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
-                  >
-                    {submitting ? 'Publishing...' : 'Publish'}
-                  </button>
-
-                  <button
-                    onClick={handleDeny}
-                    disabled={submitting}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-medium"
-                  >
-                    {submitting ? 'Denying...' : 'Deny'}
-                  </button>
-                </>
-              )}
-
-              {viewMode && (
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-700">
-                    This is a read-only view. Publish/Deny is not available.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     );
   }
@@ -410,7 +181,7 @@ const ActionsNeeded = () => {
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Actions Needed</h1>
         <p className="text-gray-500">
-          Complete list of regulations requiring admin actions
+          All regulations requiring admin review/publish actions
         </p>
       </div>
 
@@ -419,7 +190,7 @@ const ActionsNeeded = () => {
         <div className="p-6">
           <h2 className="text-lg font-semibold">All Regulations</h2>
           <p className="text-sm text-gray-500">
-            View, edit, and manage all regulations
+            Open a regulation in the Admin editor to manage deadlines, attachments, timeline, and publishing.
           </p>
         </div>
 
@@ -437,9 +208,8 @@ const ActionsNeeded = () => {
 
             <tbody className="divide-y divide-gray-200">
               {paginatedData.map((r) => {
-                // Function to handle download
+                // Download details (debug / export helper)
                 const handleDownload = () => {
-                  // Create a blob with the regulation data
                   const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -451,70 +221,82 @@ const ActionsNeeded = () => {
                   URL.revokeObjectURL(url);
                 };
 
-                // Get the appropriate deadline (revisionDeadline for "Needs Revision", otherwise regular deadline)
+                // Deadline (revisionDeadline for Needs Revision)
                 const status = String(r.status || '').toLowerCase().trim();
-                const deadline = (status === 'needs revision' || status === 'needs_revision') && r.revisionDeadline
-                  ? r.revisionDeadline
-                  : r.deadline;
-                const overdue = deadline ? (() => {
-                  try {
-                    let dateObj;
-                    if (deadline && typeof deadline.toDate === 'function') {
-                      dateObj = deadline.toDate();
-                    } else if (deadline && deadline._seconds) {
-                      dateObj = new Date(deadline._seconds * 1000);
-                    } else if (deadline && deadline.seconds) {
-                      dateObj = new Date(deadline.seconds * 1000);
-                    } else if (deadline instanceof Date) {
-                      dateObj = deadline;
-                    } else {
-                      dateObj = new Date(deadline);
-                    }
-                    return dateObj && !isNaN(dateObj.getTime()) ? dateObj < new Date() : false;
-                  } catch (e) {
-                    return false;
-                  }
-                })() : false;
-                
+                const deadline =
+                  (status === 'needs revision' || status === 'needs_revision') && r.revisionDeadline
+                    ? r.revisionDeadline
+                    : r.deadline;
+
+                const overdue = deadline
+                  ? (() => {
+                      try {
+                        let dateObj;
+                        if (deadline && typeof deadline.toDate === 'function') {
+                          dateObj = deadline.toDate();
+                        } else if (deadline && deadline._seconds) {
+                          dateObj = new Date(deadline._seconds * 1000);
+                        } else if (deadline && deadline.seconds) {
+                          dateObj = new Date(deadline.seconds * 1000);
+                        } else if (deadline instanceof Date) {
+                          dateObj = deadline;
+                        } else {
+                          dateObj = new Date(deadline);
+                        }
+                        return dateObj && !isNaN(dateObj.getTime())
+                          ? dateObj < new Date()
+                          : false;
+                      } catch (e) {
+                        return false;
+                      }
+                    })()
+                  : false;
+
                 return (
                   <tr key={r.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 max-w-[380px]">
-                      <div className="text-left font-medium truncate max-w-[360px]" title={r.title}>
-                        {r.title || "-"}
+                      <div
+                        className="text-left font-medium truncate max-w-[360px]"
+                        title={r.title}
+                      >
+                        {r.title || '-'}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">{r.category || "—"}</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {r.category || '—'}
+                      </div>
                     </td>
-                    <td className="px-6 py-4">{r.ref || r.refNumber || r.referenceNo || r.id?.substring(0, 8) || 'N/A'}</td>
+
                     <td className="px-6 py-4">
-                      {getStatusBadge(r.status)}
+                      {r.ref || r.refNumber || r.referenceNo || r.id?.substring(0, 8) || 'N/A'}
                     </td>
+
+                    <td className="px-6 py-4">{getStatusBadge(r.status)}</td>
+
                     <td className={`px-6 py-4 ${overdue ? 'text-red-600 font-medium' : ''}`}>
                       {(() => {
-                        const status = String(r.status || '').toLowerCase().trim();
-                        if (status === 'published' || status === 'publish') {
-                          return '—';
-                        }
-                        // Check for revision deadline first if status is "Needs Revision"
-                        const deadline = (status === 'needs revision' || status === 'needs_revision') && r.revisionDeadline
-                          ? r.revisionDeadline
-                          : r.deadline;
-                        const formatted = formatDate(deadline);
-                        return formatted;
+                        const s = String(r.status || '').toLowerCase().trim();
+                        if (s === 'published' || s === 'publish') return '—';
+                        const d =
+                          (s === 'needs revision' || s === 'needs_revision') && r.revisionDeadline
+                            ? r.revisionDeadline
+                            : r.deadline;
+                        return formatDate(d);
                       })()}
                     </td>
+
                     <td className="px-6 py-4 text-right space-x-3">
                       <button
-                        onClick={() => handleViewClick(r)}
+                        onClick={() => openInAdminDashboard(r, 'view')}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                        title="View details"
+                        title="View in Admin dashboard"
                       >
                         View
                       </button>
 
                       <button
-                        onClick={() => handleEditClick(r)}
+                        onClick={() => openInAdminDashboard(r, 'edit')}
                         className="text-sm font-medium text-orange-600 hover:text-orange-800 hover:underline"
-                        title="Edit regulation"
+                        title="Edit in Admin dashboard"
                       >
                         Edit
                       </button>
@@ -524,8 +306,19 @@ const ActionsNeeded = () => {
                         className="text-green-600 hover:text-green-800 text-sm ml-2"
                         title="Download details"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 inline"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
                         </svg>
                       </button>
                     </td>
@@ -535,12 +328,9 @@ const ActionsNeeded = () => {
 
               {paginatedData.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-6 py-8 text-center text-gray-500"
-                  >
-                    {searchTerm 
-                      ? 'No regulations found matching your search.' 
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    {searchTerm
+                      ? 'No regulations found matching your search.'
                       : 'No regulations found.'}
                   </td>
                 </tr>
@@ -565,9 +355,7 @@ const ActionsNeeded = () => {
                 key={p}
                 onClick={() => setCurrentPage(p)}
                 className={`px-3 py-1 border rounded text-sm ${
-                  currentPage === p
-                    ? 'bg-blue-600 text-white'
-                    : 'hover:bg-gray-100'
+                  currentPage === p ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
                 }`}
               >
                 {p}
@@ -575,9 +363,7 @@ const ActionsNeeded = () => {
             ))}
 
             <button
-              onClick={() =>
-                setCurrentPage((p) => Math.min(p + 1, totalPages))
-              }
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-3 py-1 border rounded text-sm disabled:opacity-50"
             >

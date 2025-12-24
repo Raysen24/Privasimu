@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearch } from '../../contexts/SearchContext';
@@ -37,6 +37,19 @@ const AdminDashboard = () => {
   const { user, isAdmin } = useAuth();
   const { searchTerm } = useSearch();
   const router = useRouter();
+
+  // Keep detail view in sync with URL so other pages (e.g. Actions Needed) can deep-link here
+  const hasHydratedFromQuery = useRef(false);
+
+  const setDetailUrl = (id, mode, from) => {
+    const query = { id, mode };
+    if (from) query.from = from;
+    router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+  };
+
+  const clearDetailUrl = () => {
+    router.replace({ pathname: router.pathname, query: {} }, undefined, { shallow: true });
+  };
 
   const [regulations, setRegulations] = useState([]);
   const [reviewers, setReviewers] = useState([]);
@@ -228,14 +241,18 @@ const AdminDashboard = () => {
   /* -----------------------------
      ACTION HANDLERS
   ----------------------------- */
-  const openView = (r) => {
+  const openView = (r, opts = {}) => {
     setSelectedRegulation(r);
     setDetailMode('view');
     setAdminNotes(''); // show stored adminNotes from doc in UI
     setRevisionDeadline('');
+
+    if (!opts.fromQuery) {
+      setDetailUrl(r.id, 'view', opts.from);
+    }
   };
 
-  const openEdit = (r) => {
+  const openEdit = (r, opts = {}) => {
     setSelectedRegulation(r);
     setDetailMode('edit');
     setAdminNotes(r.adminNotes || '');
@@ -254,7 +271,40 @@ const AdminDashboard = () => {
     } else {
       setRevisionDeadline('');
     }
+
+    if (!opts.fromQuery) {
+      setDetailUrl(r.id, 'edit', opts.from);
+    }
   };
+
+
+  // Hydrate detail view from URL query (id/mode). This enables other pages (e.g. Actions Needed)
+  // to open the exact same Admin editor/viewer.
+  useEffect(() => {
+    const { id, mode, from } = router.query || {};
+    if (!id) {
+      hasHydratedFromQuery.current = false;
+      return;
+    }
+    if (!regulations || regulations.length === 0) return;
+
+    const found = regulations.find((r) => r.id === id);
+    if (!found) return;
+
+    const targetMode =
+      String(mode || 'edit').toLowerCase() === 'view' ? 'view' : 'edit';
+
+    // Avoid unnecessary state churn
+    if (selectedRegulation?.id === id && detailMode === targetMode) return;
+
+    hasHydratedFromQuery.current = true;
+
+    if (targetMode === 'view') {
+      openView(found, { fromQuery: true, from });
+    } else {
+      openEdit(found, { fromQuery: true, from });
+    }
+  }, [router.query.id, router.query.mode, router.query.from, regulations]);
 
   const handleAssignReviewer = async () => {
     if (!selectedReviewer) return toast.error('Select a reviewer');
@@ -298,7 +348,11 @@ const AdminDashboard = () => {
       setSelectedRegulation(null);
       setDetailMode(null);
       setAdminNotes('');
+      clearDetailUrl();
       fetchRegulations();
+      if (router.query.from === 'actions-needed') {
+        router.push('/dashboard/actions-needed');
+      }
     } catch (e) {
       console.error(e);
       toast.error('Failed to publish regulation');
@@ -360,6 +414,12 @@ const AdminDashboard = () => {
           onClick={() => {
             setSelectedRegulation(null);
             setDetailMode(null);
+
+            const from = router.query.from;
+            clearDetailUrl();
+            if (from === 'actions-needed') {
+              router.push('/dashboard/actions-needed');
+            }
           }}
           className="mb-6 px-4 py-2 text-blue-600 hover:text-blue-800 font-medium"
         >
