@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/[...path].js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/[...path].js" }
+  ],
+  "crons": [
+    { "path": "/api/deadlines/check", "schedule": "0 2 * * *" },
+    { "path": "/api/deadlines/check", "schedule": "0 */6 * * *" }
+  ]
+}
