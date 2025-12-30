@@ -37,9 +37,10 @@ router.post("/check", async (req, res) => {
   }
 });
 
-// GET check deadlines (for Vercel Cron - Cron uses GET requests)
+// GET check deadlines (for Vercel Cron + browser check)
 router.get("/check", async (req, res) => {
   try {
+    res.setHeader("Cache-Control", "no-store"); // avoid any caching
     const result = await deadlineReminderService.checkUpcomingDeadlines();
     res.json({
       success: true,
