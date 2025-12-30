@@ -7,7 +7,6 @@
     { "src": "/api/(.*)", "dest": "api/[...path].js" }
   ],
   "crons": [
-    { "path": "/api/deadlines/check", "schedule": "0 2 * * *" },
-    { "path": "/api/deadlines/check", "schedule": "0 */6 * * *" }
+    { "path": "/api/deadlines/check", "schedule": "0 2 * * *" }
   ]
 }
