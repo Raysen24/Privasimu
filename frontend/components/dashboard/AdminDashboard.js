@@ -10,7 +10,8 @@ import {
   doc,
   updateDoc,
   arrayUnion,
-  getDoc
+  getDoc,
+  deleteField
 } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
@@ -54,6 +55,10 @@ const AdminDashboard = () => {
   const [regulations, setRegulations] = useState([]);
   const [reviewers, setReviewers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   // Modals / actions
   const [selectedAction, setSelectedAction] = useState(null);
@@ -126,32 +131,52 @@ const AdminDashboard = () => {
   };
 
   /* -----------------------------
-     FILTERED REGULATIONS (based on search)
+     FILTERED REGULATIONS (based on search and filters)
   ----------------------------- */
   const filteredRegulations = useMemo(() => {
-    if (!searchTerm || !searchTerm.trim()) {
-      return regulations;
+    let filtered = [...regulations];
+
+    // Apply status filter
+    if (statusFilter) {
+      const filterStatus = statusFilter.toLowerCase().trim();
+      filtered = filtered.filter((r) => {
+        const rStatus = String(r.status || '').toLowerCase().trim();
+        return rStatus === filterStatus || normalizeStatus(r.status) === filterStatus;
+      });
     }
-    
-    const term = searchTerm.toLowerCase().trim();
-    return regulations.filter((r) => {
-      const title = (r.title || '').toLowerCase();
-      const category = (r.category || '').toLowerCase();
-      const status = (r.status || '').toLowerCase();
-      const description = (r.description || '').toLowerCase();
-      const content = (r.content || '').toLowerCase();
-      const ref = (r.ref || r.refNumber || '').toLowerCase();
-      
-      return (
-        title.includes(term) ||
-        category.includes(term) ||
-        status.includes(term) ||
-        description.includes(term) ||
-        content.includes(term) ||
-        ref.includes(term)
-      );
-    });
-  }, [regulations, searchTerm]);
+
+    // Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter((r) => {
+        const rCategory = String(r.category || '').toLowerCase().trim();
+        return rCategory === categoryFilter.toLowerCase().trim();
+      });
+    }
+
+    // Apply search term filter
+    if (searchTerm && searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      filtered = filtered.filter((r) => {
+        const title = (r.title || '').toLowerCase();
+        const category = (r.category || '').toLowerCase();
+        const status = (r.status || '').toLowerCase();
+        const description = (r.description || '').toLowerCase();
+        const content = (r.content || '').toLowerCase();
+        const ref = (r.ref || r.refNumber || '').toLowerCase();
+        
+        return (
+          title.includes(term) ||
+          category.includes(term) ||
+          status.includes(term) ||
+          description.includes(term) ||
+          content.includes(term) ||
+          ref.includes(term)
+        );
+      });
+    }
+
+    return filtered;
+  }, [regulations, searchTerm, statusFilter, categoryFilter]);
 
   /* -----------------------------
      GRAPH DATA (Published vs Rejected per month)
@@ -253,6 +278,16 @@ const AdminDashboard = () => {
   };
 
   const openEdit = (r, opts = {}) => {
+    // Only allow editing regulations in "Pending Publish" state
+    const status = String(r.status || '').toLowerCase().trim();
+    const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+    
+    if (!isPendingPublish) {
+      toast.error('Only regulations in "Pending Publish" state can be edited');
+      openView(r, opts);
+      return;
+    }
+    
     setSelectedRegulation(r);
     setDetailMode('edit');
     setAdminNotes(r.adminNotes || '');
@@ -291,8 +326,13 @@ const AdminDashboard = () => {
     const found = regulations.find((r) => r.id === id);
     if (!found) return;
 
-    const targetMode =
-      String(mode || 'edit').toLowerCase() === 'view' ? 'view' : 'edit';
+    const status = String(found.status || '').toLowerCase().trim();
+    const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+    
+    // Force view mode for non-pending-publish regulations
+    const targetMode = !isPendingPublish 
+      ? 'view' 
+      : (String(mode || 'edit').toLowerCase() === 'view' ? 'view' : 'edit');
 
     // Avoid unnecessary state churn
     if (selectedRegulation?.id === id && detailMode === targetMode) return;
@@ -338,9 +378,15 @@ const AdminDashboard = () => {
       setIsSubmitting(true);
       const ref = doc(db, 'regulations', selectedRegulation.id);
       const now = new Date();
+      
+      // Remove all notes and revision deadline when publishing
       await updateDoc(ref, {
         status: 'Published',
-        adminNotes: adminNotes,
+        notes: deleteField(), // Remove employee notes
+        adminNotes: deleteField(), // Remove admin notes
+        feedback: deleteField(), // Remove reviewer feedback
+        reviewerFeedback: deleteField(), // Remove reviewer feedback
+        revisionDeadline: deleteField(), // Remove revision deadline
         publishedAt: now,
         updatedAt: now
       });
@@ -486,6 +532,20 @@ const AdminDashboard = () => {
                   <p className="text-gray-500">N/A</p>
                 )}
               </div>
+
+              {/* Employee Notes */}
+              {selectedRegulation.notes && (
+                <div>
+                  <label className="text-sm font-semibold text-gray-700">
+                    Employee Notes
+                  </label>
+                  <div className="mt-1 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap">
+                      {selectedRegulation.notes}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Reviewer Feedback */}
               {(selectedRegulation.feedback || selectedRegulation.reviewerFeedback) && (
@@ -649,13 +709,23 @@ const AdminDashboard = () => {
           <div className="col-span-1 bg-white rounded-lg border p-6">
             <h3 className="text-lg font-semibold mb-4">Admin Notes</h3>
 
-            {detailMode === 'view' ? (
-              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 min-h-40">
-                <p className="text-gray-900 whitespace-pre-wrap">
-                  {selectedRegulation.adminNotes || 'No notes added'}
-                </p>
-              </div>
-            ) : (
+            {(() => {
+              const status = String(selectedRegulation.status || '').toLowerCase().trim();
+              const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+              const shouldShowView = detailMode === 'view' || !isPendingPublish;
+              
+              return shouldShowView ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 min-h-40">
+                  <p className="text-gray-900 whitespace-pre-wrap">
+                    {selectedRegulation.adminNotes || 'No notes added'}
+                  </p>
+                  {!isPendingPublish && (
+                    <p className="text-xs text-gray-500 mt-2 italic">
+                      Only regulations in 'Pending Publish' state can be edited
+                    </p>
+                  )}
+                </div>
+              ) : (
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-700 mb-1 block">
@@ -699,7 +769,8 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -751,10 +822,70 @@ const AdminDashboard = () => {
       {/* REGULATIONS TABLE */}
       <div className="bg-white rounded-lg border">
         <div className="p-6">
-          <h2 className="text-lg font-semibold">Regulations</h2>
-          <p className="text-sm text-gray-500">
-            Manage and review all regulations
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">Regulations</h2>
+              <p className="text-sm text-gray-500">
+                Manage and review all regulations
+              </p>
+            </div>
+          </div>
+
+          {/* FILTERS */}
+          <div className="flex flex-wrap gap-4 mb-4 pb-4 border-b">
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Filter by Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Statuses</option>
+                <option value="Draft">Draft</option>
+                <option value="Pending Review">Pending Review</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Pending Publish">Pending Publish</option>
+                <option value="Needs Revision">Needs Revision</option>
+                <option value="Published">Published</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Filter by Category
+              </label>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All Categories</option>
+                <option value="HR">HR</option>
+                <option value="Finance">Finance</option>
+                <option value="IT">IT</option>
+                <option value="Operations">Operations</option>
+                <option value="Legal">Legal</option>
+                <option value="Compliance">Compliance</option>
+              </select>
+            </div>
+
+            {(statusFilter || categoryFilter) && (
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setStatusFilter('');
+                    setCategoryFilter('');
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -803,19 +934,36 @@ const AdminDashboard = () => {
                       View
                     </button>
 
-                    <button
-                      onClick={() => openEdit(r)}
-                      className="text-orange-600 hover:underline text-sm"
-                    >
-                      Edit
-                    </button>
+                    {(() => {
+                      const status = String(r.status || '').toLowerCase().trim();
+                      const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+                      
+                      if (!isPendingPublish) {
+                        return (
+                          <span className="text-gray-400 text-sm cursor-not-allowed" title="Only regulations in 'Pending Publish' state can be edited">
+                            Edit
+                          </span>
+                        );
+                      }
+                      
+                      return (
+                        <button
+                          onClick={() => openEdit(r)}
+                          className="text-orange-600 hover:underline text-sm"
+                        >
+                          Edit
+                        </button>
+                      );
+                    })()}
                   </td>
                 </tr>
               ))}
               {filteredRegulations.length === 0 && (
                 <tr>
                   <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
-                    {searchTerm ? 'No regulations found matching your search.' : 'No regulations found.'}
+                    {searchTerm || statusFilter || categoryFilter
+                      ? 'No regulations found matching your filters.'
+                      : 'No regulations found.'}
                   </td>
                 </tr>
               )}

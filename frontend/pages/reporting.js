@@ -104,7 +104,6 @@ export default function Reporting() {
         Code: r.code,
         Deadline: isPublished(r.status) ? '—' : (deadline ? formatDate(deadline) : 'No deadline set'),
         Remaining: isPublished(r.status) ? '—' : (deadline ? calculateRemainingTime(deadline) : 'No deadline'),
-        "Effective Date": r.effectiveDate ? formatDate(r.effectiveDate) : '',
         Version: r.version,
         Feedback: r.feedback,
       };

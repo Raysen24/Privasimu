@@ -55,6 +55,19 @@ export default function EditRegulation() {
       setLoading(true);
       fetchRegulation(id)
         .then((regulation) => {
+          // Only allow editing regulations in "Pending Publish" state
+          const status = String(regulation.status || '').toLowerCase().trim();
+          const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+          
+          if (!isPendingPublish) {
+            setError('Only regulations in "Pending Publish" state can be edited');
+            setLoading(false);
+            setTimeout(() => {
+              router.push('/regulations');
+            }, 2000);
+            return;
+          }
+          
           // Get raw deadline from _original or deadlineRaw
           const rawDeadline = regulation._original?.deadline || regulation.deadlineRaw || regulation.deadline;
           const rawRevisionDeadline = regulation._original?.revisionDeadline || regulation.revisionDeadline;
@@ -86,7 +99,7 @@ export default function EditRegulation() {
           setLoading(false);
         });
     }
-  }, [id, fetchRegulation]);
+  }, [id, fetchRegulation, router]);
 
   const handleFieldChange = (key, value) => {
     setFormData(prev => ({
@@ -126,6 +139,16 @@ export default function EditRegulation() {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    
+    // Only allow saving regulations in "Pending Publish" state
+    const status = String(formData.status || '').toLowerCase().trim();
+    const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+    
+    if (!isPendingPublish) {
+      alert("Only regulations in 'Pending Publish' state can be edited");
+      router.push('/regulations');
+      return;
+    }
     
     // Validate required fields
     if (!formData.title || !formData.category) {

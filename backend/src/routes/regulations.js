@@ -175,7 +175,6 @@ router.post("/", async (req, res) => {
       description, 
       notes, 
       deadline, 
-      effectiveDate, 
       version = "v1.0",
       attachments = [],
       createdBy,
@@ -200,7 +199,6 @@ router.post("/", async (req, res) => {
       description: description || "",
       notes: notes || "",
       deadline: deadline ? new Date(deadline) : null,
-      effectiveDate: effectiveDate ? new Date(effectiveDate) : null,
       version,
       attachments: Array.isArray(attachments) ? attachments : [],
       createdBy,
@@ -345,23 +343,6 @@ router.put("/:id", async (req, res) => {
     } else if (validUpdates.deadline === null || validUpdates.deadline === '') {
       // Explicitly set to null if empty string or null
       validUpdates.deadline = null;
-    }
-    
-    // Convert effectiveDate to Date object if provided as string
-    if (validUpdates.effectiveDate) {
-      try {
-        if (typeof validUpdates.effectiveDate === 'string') {
-          const effectiveDate = new Date(validUpdates.effectiveDate);
-          if (!isNaN(effectiveDate.getTime())) {
-            validUpdates.effectiveDate = effectiveDate;
-          } else {
-            validUpdates.effectiveDate = null;
-          }
-        }
-      } catch (e) {
-        console.error('Error converting effectiveDate:', e);
-        validUpdates.effectiveDate = null;
-      }
     }
     
     const regulationRef = db.collection("regulations").doc(id);
@@ -606,12 +587,18 @@ router.post('/:id/publish', requireAdmin, async (req, res) => {
     const currentVersion = regulationData.version || 1;
     const now = new Date();
 
+    // Remove all notes and revision deadline when publishing
     await regulationRef.update({
       status: 'published',
       version: currentVersion + 1,
       publishedAt: now,
       lastUpdated: now,
       isActive: true,
+      notes: db.FieldValue.delete(), // Remove employee notes
+      adminNotes: db.FieldValue.delete(), // Remove admin notes
+      feedback: db.FieldValue.delete(), // Remove reviewer feedback
+      reviewerFeedback: db.FieldValue.delete(), // Remove reviewer feedback
+      revisionDeadline: db.FieldValue.delete(), // Remove revision deadline
       $push: {
         versionHistory: {
           version: currentVersion,
@@ -908,11 +895,17 @@ router.post('/:id/publish', requireAdmin, async (req, res) => {
       });
     }
 
+    // Remove all notes and revision deadline when publishing
     const updateData = {
       status: 'published',
       publishedAt: new Date(),
       publishedBy: req.user.uid,
       updatedAt: new Date(),
+      notes: db.FieldValue.delete(), // Remove employee notes
+      adminNotes: db.FieldValue.delete(), // Remove admin notes
+      feedback: db.FieldValue.delete(), // Remove reviewer feedback
+      reviewerFeedback: db.FieldValue.delete(), // Remove reviewer feedback
+      revisionDeadline: db.FieldValue.delete(), // Remove revision deadline
       history: db.FieldValue.arrayUnion({
         action: 'published',
         by: req.user.uid,

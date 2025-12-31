@@ -293,13 +293,31 @@ const ActionsNeeded = () => {
                         View
                       </button>
 
-                      <button
-                        onClick={() => openInAdminDashboard(r, 'edit')}
-                        className="text-sm font-medium text-orange-600 hover:text-orange-800 hover:underline"
-                        title="Edit in Admin dashboard"
-                      >
-                        Edit
-                      </button>
+                      {(() => {
+                        const status = String(r.status || '').toLowerCase().trim();
+                        const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+                        
+                        if (!isPendingPublish) {
+                          return (
+                            <span
+                              className="text-sm font-medium text-gray-400 cursor-not-allowed"
+                              title="Only regulations in 'Pending Publish' state can be edited"
+                            >
+                              Edit
+                            </span>
+                          );
+                        }
+                        
+                        return (
+                          <button
+                            onClick={() => openInAdminDashboard(r, 'edit')}
+                            className="text-sm font-medium text-orange-600 hover:text-orange-800 hover:underline"
+                            title="Edit in Admin dashboard"
+                          >
+                            Edit
+                          </button>
+                        );
+                      })()}
 
                       <button
                         onClick={handleDownload}

@@ -63,7 +63,6 @@ export const useRegulationStore = create(
       description: "",
       notes: "",
       deadline: "",
-      effectiveDate: "",
       version: "v1.0",
       attachments: [],
     },
@@ -96,7 +95,6 @@ export const useRegulationStore = create(
           description: "",
           notes: "",
           deadline: "",
-          effectiveDate: "",
           version: "v1.0",
           attachments: [], // Clear attachments when resetting form
         },
@@ -244,7 +242,6 @@ export const useRegulationStore = create(
                 description: "",
                 notes: "",
                 deadline: "",
-                effectiveDate: "",
                 version: "v1.0",
                 attachments: [...currentAttachments], // Preserve attachments
               },

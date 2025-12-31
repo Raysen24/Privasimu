@@ -217,7 +217,6 @@ const transformRegulation = (regulation) => {
     code: regulation.code || regulation.regulationCode || '', // Include code field with fallback to regulationCode
     description: regulation.description,
     notes: regulation.notes,
-    effectiveDate: regulation.effectiveDate ? formatDeadline(regulation.effectiveDate) : '',
     version: regulation.version,
     submittedAt: regulation.submittedAt,
     reviewedAt: regulation.reviewedAt,
@@ -322,7 +321,6 @@ export const api = {
           ...regulationData,
           code, // Explicitly include code field
           deadline: regulationData.deadline ? new Date(regulationData.deadline).toISOString() : null,
-          effectiveDate: regulationData.effectiveDate ? new Date(regulationData.effectiveDate).toISOString() : null,
           attachments: Array.isArray(regulationData.attachments)
             ? regulationData.attachments.map((item) => ({
                 name: item?.name || "Attachment",
@@ -368,19 +366,6 @@ export const api = {
         } else {
           // If deadline is not provided or is empty string, set to null
           payload.deadline = null;
-        }
-        if (payload.effectiveDate) {
-          try {
-            const effectiveDate = new Date(payload.effectiveDate);
-            if (!isNaN(effectiveDate.getTime())) {
-              payload.effectiveDate = effectiveDate.toISOString();
-            } else {
-              payload.effectiveDate = null;
-            }
-          } catch (e) {
-            console.error('Error converting effectiveDate:', e);
-            payload.effectiveDate = null;
-          }
         }
         if (payload.attachments) {
           payload.attachments = Array.isArray(payload.attachments)

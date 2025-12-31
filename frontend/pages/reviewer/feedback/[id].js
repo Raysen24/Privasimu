@@ -80,7 +80,6 @@ export default function EditFeedbackReviewer() {
     return {
       category: reg.category || "-",
       code: reg.code || reg.regulationCode || "-",
-      effectiveDate: fmtDDMMYY(reg.effectiveDate),
       status: reg.status || "Rejected",
       deadlinePretty: fmtDDMMYY(reg.deadline),
     };
@@ -141,10 +140,7 @@ export default function EditFeedbackReviewer() {
               <span className="font-medium">Category</span> : {header.category}
             </div>
             <div>
-              <span className="font-medium">Regulation Code</span> : {header.code}
-            </div>
-            <div>
-              <span className="font-medium">Effective Date</span> : {header.effectiveDate}
+              <span className="font-medium">Reference Code</span> : {reg.ref || reg.refNumber || "-"}
             </div>
             {reg.deadline && (
               <div>
@@ -162,12 +158,47 @@ export default function EditFeedbackReviewer() {
             <div className="text-gray-500 text-sm">No content.</div>
           )}
 
-          {/* Employee Notes */}
-          {reg.notes && (
+          {/* Employee Notes - Hide for published regulations */}
+          {(() => {
+            const status = reg?.status?.toLowerCase() || "";
+            const isPublished = status === "published" || status === "publish";
+            
+            if (isPublished) return null;
+            
+            return reg.notes ? (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Employee Notes</h3>
+                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap">
+                  {reg.notes}
+                </div>
+              </div>
+            ) : null;
+          })()}
+
+          {/* Attachments */}
+          {Array.isArray(reg.attachments) && reg.attachments.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Employee Notes</h3>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap">
-                {reg.notes}
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Attachments</h3>
+              <div className="bg-white border border-gray-200 rounded-lg divide-y">
+                {reg.attachments.map((attachment, index) => (
+                  <div
+                    key={`${attachment.url}-${index}`}
+                    className="flex items-center justify-between px-4 py-3 text-sm text-gray-700"
+                  >
+                    <div>
+                      <p className="font-medium">{attachment.name || `Attachment ${index + 1}`}</p>
+                      <p className="text-xs text-gray-500 truncate max-w-sm">{attachment.url}</p>
+                    </div>
+                    <a
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm font-medium"
+                    >
+                      Open
+                    </a>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -182,18 +213,25 @@ export default function EditFeedbackReviewer() {
             </span>
           </div>
 
-          {/* Revision Deadline - Show if reviewer assigned one */}
-          {reg.revisionDeadline && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm font-medium text-blue-800 mb-1">Revision Deadline (Assigned by You)</div>
-              <div className="text-sm font-semibold text-blue-900">
-                {fmtDDMMYY(reg.revisionDeadline)}
+          {/* Revision Deadline - Hide for published regulations */}
+          {(() => {
+            const status = reg?.status?.toLowerCase() || "";
+            const isPublished = status === "published" || status === "publish";
+            
+            if (isPublished) return null;
+            
+            return reg.revisionDeadline ? (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-sm font-medium text-blue-800 mb-1">Revision Deadline (Assigned by You)</div>
+                <div className="text-sm font-semibold text-blue-900">
+                  {fmtDDMMYY(reg.revisionDeadline)}
+                </div>
+                <div className="text-xs text-blue-600 mt-1">
+                  Employee must revise by this date
+                </div>
               </div>
-              <div className="text-xs text-blue-600 mt-1">
-                Employee must revise by this date
-              </div>
-            </div>
-          )}
+            ) : null;
+          })()}
 
           <div className="mb-4">
             <div className="text-sm font-medium text-gray-700 mb-2">Deadline</div>

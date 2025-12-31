@@ -145,7 +145,6 @@ export default function ViewRegulation() {
               </p>
               <p><span className="font-medium">Version:</span> {regulation.version}</p>
               <p><span className="font-medium">Deadline:</span> {regulation.deadline}</p>
-              <p><span className="font-medium">Effective Date:</span> {regulation.effectiveDate}</p>
             </div>
           </div>
         </div>
