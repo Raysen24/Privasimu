@@ -13,7 +13,9 @@ export default function Sidebar() {
   const reviewerOnly = isReviewer() && !admin
 
   const regulationsHref = reviewerOnly ? '/reviewer/regulations' : '/regulations'
-  const regulationsActive = reviewerOnly ? isActive('/reviewer') : isActive('/regulations')
+  const regulationsActive = reviewerOnly
+    ? isActive('/reviewer')
+    : isActive('/regulations')
 
   const actionsNeededActive = isActive('/dashboard/actions-needed')
   const dashboardActive = isActive('/dashboard') && !actionsNeededActive
@@ -31,6 +33,7 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-gray-100 min-h-screen p-4">
       <nav className="space-y-2">
+        {/* Dashboard */}
         <Link href="/dashboard" className={linkCls(dashboardActive)}>
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -43,8 +46,12 @@ export default function Sidebar() {
           <span>Dashboard</span>
         </Link>
 
+        {/* Actions Needed — ADMIN ONLY */}
         {admin && (
-          <Link href="/dashboard/actions-needed" className={linkCls(actionsNeededActive)}>
+          <Link
+            href="/dashboard/actions-needed"
+            className={linkCls(actionsNeededActive)}
+          >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -57,19 +64,23 @@ export default function Sidebar() {
           </Link>
         )}
 
-        <Link href={regulationsHref} className={linkCls(regulationsActive)}>
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <span>Regulations</span>
-        </Link>
+        {/* Regulations — NOT FOR ADMIN */}
+        {!admin && (
+          <Link href={regulationsHref} className={linkCls(regulationsActive)}>
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span>Regulations</span>
+          </Link>
+        )}
 
-        {!reviewerOnly && (
+        {/* Reporting — NOT FOR ADMIN */}
+        {!admin && !reviewerOnly && (
           <Link href="/reporting" className={linkCls(isActive('/reporting'))}>
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -85,6 +96,7 @@ export default function Sidebar() {
 
         <div className="border-t border-gray-300 my-4" />
 
+        {/* Settings — ALL ROLES */}
         <Link href="/settings" className={linkCls(isActive('/settings'))}>
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -103,6 +115,7 @@ export default function Sidebar() {
           <span>Settings</span>
         </Link>
 
+        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center space-x-3 px-3 py-2 rounded-lg transition text-gray-700 hover:bg-gray-200 w-full text-left"
