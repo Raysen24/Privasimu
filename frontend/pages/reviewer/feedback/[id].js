@@ -2,11 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc, serverTimestamp, arrayUnion } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { useAuth } from "../../../contexts/AuthContext";
 import Unauthorized from "../../../components/common/Unauthorized";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import ProgressTracker from "../../../components/common/ProgressTracker";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -99,6 +100,13 @@ export default function EditFeedbackReviewer() {
         updatedAt: serverTimestamp(),
         feedbackUpdatedAt: serverTimestamp(),
         feedbackUpdatedBy: user.uid,
+        history: arrayUnion({
+          action: "reviewer_feedback_updated",
+          actorId: user.uid,
+          actorRole: "reviewer",
+          timestamp: serverTimestamp(),
+          note: feedback || "",
+        }),
       });
       setShowConfirm(false);
       router.push("/dashboard/reviewer");
@@ -263,6 +271,10 @@ export default function EditFeedbackReviewer() {
             {saving ? "Saving..." : "Submit"}
           </button>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <ProgressTracker history={reg?.history} createdBy={reg?.createdBy} />
       </div>
 
       {/* Confirm modal */}

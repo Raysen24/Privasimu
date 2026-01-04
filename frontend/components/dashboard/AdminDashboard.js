@@ -9,6 +9,7 @@ import {
   doc,
   updateDoc,
   arrayUnion,
+  serverTimestamp,
   getDoc
 } from 'firebase/firestore';
 import { format } from 'date-fns';
@@ -181,7 +182,14 @@ const AdminDashboard = () => {
         assignedReviewer: selectedReviewer,
         assignedReviewerName: reviewer.data().name || 'Reviewer',
         status: 'Pending Review',
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        history: arrayUnion({
+          action: 'admin_assigned_reviewer',
+          actorId: user?.uid || null,
+          actorRole: 'admin',
+          timestamp: serverTimestamp(),
+          note: `Assigned reviewer ID: ${selectedReviewer}`
+        })
       });
 
       toast.success('Reviewer assigned');
@@ -204,7 +212,16 @@ const AdminDashboard = () => {
         status: 'Published',
         adminNotes: adminNotes,
         publishedAt: now,
-        updatedAt: now
+        publishedBy: user.uid,
+        publishedByName: user.name || user.email || 'Admin',
+        updatedAt: now,
+        history: arrayUnion({
+          action: 'admin_published',
+          actorId: user.uid,
+          actorRole: 'admin',
+          timestamp: serverTimestamp(),
+          note: adminNotes || 'Published'
+        })
       });
       toast.success('Regulation published');
       setSelectedRegulation(null);
@@ -229,7 +246,16 @@ const AdminDashboard = () => {
         status: 'Needs Revision',
         adminNotes: adminNotes,
         deniedAt: now,
-        updatedAt: now
+        deniedBy: user.uid,
+        deniedByName: user.name || user.email || 'Admin',
+        updatedAt: now,
+        history: arrayUnion({
+          action: 'admin_requested_revision',
+          actorId: user.uid,
+          actorRole: 'admin',
+          timestamp: serverTimestamp(),
+          note: adminNotes || ''
+        })
       });
       toast.info('Regulation marked for revision');
       setSelectedRegulation(null);

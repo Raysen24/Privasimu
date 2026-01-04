@@ -7,11 +7,13 @@ import {
   getDoc,
   updateDoc,
   serverTimestamp,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../../../lib/firebase";
 import { useAuth } from "../../../contexts/AuthContext";
 import Unauthorized from "../../../components/common/Unauthorized";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import ProgressTracker from "../../../components/common/ProgressTracker";
 
 const toDate = (value) => {
   if (!value) return null;
@@ -125,6 +127,13 @@ export default function ReviewRegulationReviewer() {
         reviewedAt: serverTimestamp(),
         reviewedBy: user.uid,
         reviewerName: user.name || user.email || "Reviewer",
+        history: arrayUnion({
+          action: decision === "approve" ? "reviewer_approved" : "reviewer_rejected",
+          actorId: user.uid,
+          actorRole: "reviewer",
+          timestamp: serverTimestamp(),
+          note: (notes || "").trim(),
+        }),
         updatedAt: serverTimestamp(),
       };
 
@@ -381,6 +390,10 @@ export default function ReviewRegulationReviewer() {
           })()}
         </div>
       </div>
+
+    <div className="mt-6">
+      <ProgressTracker history={reg?.history} createdBy={reg?.createdBy} />
+    </div>
 
       {/* Confirm modal */}
       {showConfirm && (
