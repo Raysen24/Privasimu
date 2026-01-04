@@ -54,8 +54,9 @@ export const AuthProvider = ({ children }) => {
             // Do NOT force-redirect when already on other /dashboard/* pages
             if (router.pathname === '/login' || router.pathname === '/dashboard') {
               const dashboardPath = getDashboardPath(userData.role);
-              console.log('Redirecting to:', dashboardPath);
-              router.push(dashboardPath);
+              if (router.pathname !== dashboardPath) {
+                router.push(dashboardPath);
+              }
             }
 
           } else {
@@ -79,7 +80,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Cleaning up auth listener');
       unsubscribe();
     };
-  }, [router]);
+  }, []);
 
   const fetchUserData = async (uid) => {
     console.log('Fetching user data for UID:', uid);
