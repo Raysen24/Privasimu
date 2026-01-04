@@ -187,7 +187,7 @@ const AdminDashboard = () => {
           action: 'admin_assigned_reviewer',
           actorId: user?.uid || null,
           actorRole: 'admin',
-          timestamp: serverTimestamp(),
+          timestamp: new Date(),
           note: `Assigned reviewer ID: ${selectedReviewer}`
         })
       });
@@ -219,7 +219,7 @@ const AdminDashboard = () => {
           action: 'admin_published',
           actorId: user.uid,
           actorRole: 'admin',
-          timestamp: serverTimestamp(),
+          timestamp: new Date(),
           note: adminNotes || 'Published'
         })
       });
@@ -253,7 +253,7 @@ const AdminDashboard = () => {
           action: 'admin_requested_revision',
           actorId: user.uid,
           actorRole: 'admin',
-          timestamp: serverTimestamp(),
+          timestamp: new Date(),
           note: adminNotes || ''
         })
       });
