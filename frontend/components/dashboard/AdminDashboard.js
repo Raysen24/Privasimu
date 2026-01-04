@@ -63,7 +63,8 @@ const AdminDashboard = () => {
       setLoading(true);
       await Promise.all([fetchRegulations(), fetchReviewers()]);
     } catch (e) {
-      toast.error('Failed to load admin data');
+      console.error('Admin dashboard load failed:', e);
+      toast.error(`Failed to load admin data: ${e?.message || 'unknown error'}`);
     } finally {
       setLoading(false);
     }
