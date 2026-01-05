@@ -57,12 +57,30 @@ export default function EditRegulation() {
       setLoading(true);
       fetchRegulation(id)
         .then((regulation) => {
-          // Only allow editing regulations in "Pending Publish" state
-          const status = String(regulation.status || '').toLowerCase().trim();
-          const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
+          // Allow editing only for specific statuses based on role
+          const statusRaw = String(regulation.status || '');
+          const status = statusRaw.toLowerCase().trim();
+          const role = user?.role;
+          // If auth context isn't ready yet, don't block the user with a premature redirect.
+          if (!role) {
+            // We'll still load the regulation; role-based edit checks are enforced on save.
+          }
           
-          if (!isPendingPublish) {
-            setError('Only regulations in "Pending Publish" state can be edited');
+          const employeeEditable = (
+            status === 'draft' ||
+            status === 'needs revision' ||
+            status === 'needs_revision' ||
+            status === 'revision_required'
+          );
+          
+          // Admin can also edit before publishing (e.g., Pending Publish) plus employee-editable statuses
+          const adminEditable = employeeEditable || status === 'pending publish' || status === 'pending_publish';
+          
+          const canEdit = !role ? true : (role === 'admin' ? adminEditable : role === 'employee' ? employeeEditable : false);
+          
+          if (!canEdit) {
+            const prettyRole = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'User';
+            setError(`${prettyRole} can only edit regulations in Draft / Needs Revision${role === 'admin' ? ' / Pending Publish' : ''} state`);
             setLoading(false);
             setTimeout(() => {
               router.push('/regulations');
@@ -105,7 +123,7 @@ export default function EditRegulation() {
           setLoading(false);
         });
     }
-  }, [id, fetchRegulation, router]);
+  }, [id, fetchRegulation, router, user]);
 
   const handleFieldChange = (key, value) => {
     setFormData(prev => ({
@@ -132,30 +150,36 @@ export default function EditRegulation() {
       setAttachmentLabel("");
       setAttachmentUrl("");
     } catch (error) {
-      alert("Please enter a valid URL (e.g., https://example.com/document.pdf).");
+      console.error('Invalid attachment URL:', error);
+      alert('Please provide a valid URL (including http/https).');
     }
-  };
-
-  const handleRemoveAttachment = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index),
-    }));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
-    // Only allow saving regulations in "Pending Publish" state
-    const status = String(formData.status || '').toLowerCase().trim();
-    const isPendingPublish = status === 'pending publish' || status === 'pending_publish';
-    
-    if (!isPendingPublish) {
-      alert("Only regulations in 'Pending Publish' state can be edited");
+    // Allow saving only when the current user is allowed to edit the regulation
+    const statusRaw = String(formData.status || '');
+    const status = statusRaw.toLowerCase().trim();
+    const role = user?.role;
+
+    const employeeEditable = (
+      status === 'draft' ||
+      status === 'needs revision' ||
+      status === 'needs_revision' ||
+      status === 'revision_required'
+    );
+
+    const adminEditable = employeeEditable || status === 'pending publish' || status === 'pending_publish';
+    const canEdit = role === 'admin' ? adminEditable : role === 'employee' ? employeeEditable : false;
+
+    if (!canEdit) {
+      alert(role === 'admin'
+        ? "Only Draft / Needs Revision / Pending Publish regulations can be edited"
+        : "Only Draft / Needs Revision regulations can be edited");
       router.push('/regulations');
       return;
     }
-    
+
     // Validate required fields
     if (!formData.title || !formData.category) {
       alert("Please fill in all required fields (Title and Category)");

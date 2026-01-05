@@ -214,6 +214,7 @@ router.post("/", async (req, res) => {
       version,
       attachments: Array.isArray(attachments) ? attachments : [],
       createdBy,
+      assignedTo: createdBy || null,
       status: 'Draft',
       code: code || '',
       ref: refNumber,
