@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "../contexts/AuthContext";
 import { parseDate, formatDate } from "../lib/dateUtils";
+import ProgressTracker from "../components/common/ProgressTracker";
 
 // Dynamically import ReactQuill (for client-side only)
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
@@ -37,6 +38,7 @@ export default function EditRegulation() {
     reviewerFeedback: "",
   });
   const [isSaved, setIsSaved] = useState(false);
+  const [progressMeta, setProgressMeta] = useState({ history: [], createdBy: null });
   const [isDeleting, setIsDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,6 +93,10 @@ export default function EditRegulation() {
             adminNotes: regulation.adminNotes || "",
             feedback: regulation.feedback || regulation.reviewerFeedback || "",
             reviewerFeedback: regulation.reviewerFeedback || "",
+          });
+          setProgressMeta({
+            history: regulation.history || [],
+            createdBy: regulation.createdBy || null,
           });
           setLoading(false);
         })
@@ -292,6 +298,10 @@ export default function EditRegulation() {
           Regulation updated successfully! Redirecting...
         </div>
       )}
+
+      <div className="mb-6">
+        <ProgressTracker history={progressMeta.history} createdBy={progressMeta.createdBy} />
+      </div>
 
       {/* Feedback from reviewer/admin */}
       {(() => {
