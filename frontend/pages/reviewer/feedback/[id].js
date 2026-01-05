@@ -104,7 +104,7 @@ export default function EditFeedbackReviewer() {
           action: "reviewer_feedback_updated",
           actorId: user.uid,
           actorRole: "reviewer",
-          timestamp: new Date(),
+          timestamp: Timestamp.now(),
           note: feedback || "",
         }),
       });

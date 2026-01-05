@@ -131,7 +131,7 @@ export default function ReviewRegulationReviewer() {
           action: decision === "approve" ? "reviewer_approved" : "reviewer_rejected",
           actorId: user.uid,
           actorRole: "reviewer",
-          timestamp: new Date(), // ✅ allowed inside arrayUnion
+          timestamp: Timestamp.now(),
           note: (notes || "").trim(),
         }),
         updatedAt: serverTimestamp(),
