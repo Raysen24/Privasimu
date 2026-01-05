@@ -8,6 +8,11 @@ let serviceAccount;
 if (process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+    // Fix private_key formatting when stored in env vars (Vercel often double-escapes newlines)
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+    }
   } catch (err) {
     console.error("FIREBASE_SERVICE_ACCOUNT is not valid JSON:", err);
     process.exit(1);

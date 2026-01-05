@@ -3,6 +3,7 @@ const cors = require("cors");
 
 const { db } = require("./firebase");
 const accessLogger = require("./middleware/accessLogger");
+const userContext = require("./middleware/userContext");
 
 // Import routes
 const regulationsRoutes = require("./routes/regulations");
@@ -15,6 +16,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(userContext);
 app.use(accessLogger); // Log all API access
 
 // Debug middleware to log all requests

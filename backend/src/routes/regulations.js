@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { db } = require("../firebase");
+const { admin, db } = require("../firebase");
 const { requireReviewer, requireAdmin } = require("../middleware/roles");
 const { v4: uuidv4 } = require('uuid');
 
@@ -107,21 +107,32 @@ router.all(["/:id/submit"], async (req, res) => {
       return res.status(404).json({ success: false, error: 'Regulation not found' });
     }
 
+    const prevStatus = doc.data().status;
+    const actorId = req.headers['x-user-id'] || doc.data().createdBy || null;
+    const now = new Date();
+
     const updates = {
       status: 'Pending Review',
-      submittedAt: new Date(),
-      updatedAt: new Date(),
+      submittedAt: now,
+      updatedAt: now,
+      history: admin.firestore.FieldValue.arrayUnion({
+        action: prevStatus === 'Needs Revision' ? 'resubmitted' : 'submitted',
+        actorId,
+        actorRole: 'employee',
+        timestamp: now,
+        note: prevStatus === 'Needs Revision' ? 'Regulation resubmitted after revision' : 'Regulation submitted for review'
+      }),
       workflow: {
         currentStage: 'review',
         stages: {
           ...(doc.data().workflow?.stages || {}),
           review: {
             status: 'active',
-            timestamp: new Date()
+            timestamp: now
           },
           draft: {
             status: 'completed',
-            timestamp: new Date()
+            timestamp: now
           }
         }
       }
@@ -192,6 +203,7 @@ router.post("/", async (req, res) => {
     // Generate reference number
     const refNumber = generateRefNumber(category);
     
+    const now = new Date();
     // Create regulation data
     const regulationData = {
       title,
@@ -206,14 +218,24 @@ router.post("/", async (req, res) => {
       code: code || '',
       ref: refNumber,
       refNumber: refNumber,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
+      // Progress tracker / audit history
+      history: [
+        {
+          action: 'created',
+          actorId: createdBy || null,
+          actorRole: 'employee',
+          timestamp: now,
+          note: 'Regulation created'
+        }
+      ],
       workflow: {
         currentStage: 'draft',
         stages: {
           draft: {
             status: 'active',
-            timestamp: new Date()
+            timestamp: now
           }
         }
       }
@@ -311,13 +333,15 @@ router.put("/:id", async (req, res) => {
   console.log('PUT /:id route hit with params:', req.params, 'body:', req.body);
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updates = req.body || {};
+    const { __auditAction, __auditNote, ...updatesWithoutAudit } = updates;
     
     // Remove immutable fields
-    const { id: _, createdAt, createdBy, refNumber, ...validUpdates } = updates;
+    const { id: _, createdAt, createdBy, refNumber, ...validUpdates } = updatesWithoutAudit;
     
     // Add updatedAt timestamp
-    validUpdates.updatedAt = new Date();
+    const now = new Date();
+    validUpdates.updatedAt = now;
     
     // Convert deadline to Date object if provided as string
     if (validUpdates.deadline) {
@@ -354,6 +378,20 @@ router.put("/:id", async (req, res) => {
     
     // Check if the user is the creator (only allow updates by creator or admin)
     const regulation = doc.data();
+    const actorId = req.headers['x-user-id'] || req.user?.uid || null;
+    const actorRole = req.headers['x-user-role'] || req.user?.role || (regulation.createdBy === actorId ? 'employee' : 'user');
+    const action = __auditAction || (regulation.status === 'Needs Revision' ? 'revised' : 'updated');
+    const note = __auditNote || (action === 'revised' ? 'Regulation revised by employee' : 'Regulation updated');
+
+    // Append to progress tracker / audit history
+    validUpdates.history = admin.firestore.FieldValue.arrayUnion({
+      action,
+      actorId,
+      actorRole,
+      timestamp: now,
+      note
+    });
+
     if (req.user && req.user.role !== 'admin' && regulation.createdBy !== req.user.uid) {
       return res.status(403).json({ 
         success: false, 
