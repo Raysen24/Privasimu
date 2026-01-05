@@ -19,6 +19,9 @@ export default function Regulations() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [deadlineFilter, setDeadlineFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
 
   const categories = Array.from(
     new Set(regulations.map((r) => r.category).filter(Boolean))
@@ -398,6 +401,18 @@ export default function Regulations() {
         );
     }
   };
+  // Pagination (client-side)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, deadlineFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRegulations.length / itemsPerPage));
+  const paginatedRegulations = filteredRegulations.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
 
   return (
     <div className="p-6">
@@ -496,7 +511,7 @@ export default function Regulations() {
                   </td>
                 </tr>
               ) : filteredRegulations.length > 0 ? (
-                filteredRegulations.map((r, index) => (
+                paginatedRegulations.map((r, index) => (
                   <tr
                     key={index}
                     className="border-b last:border-0 hover:bg-gray-50 transition"
@@ -619,14 +634,31 @@ export default function Regulations() {
 
         {/* Pagination */}
         <div className="flex justify-between items-center mt-6 text-sm text-gray-600">
-          <button className="border border-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-100">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className={`border border-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-100 ${
+              currentPage <= 1 ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""
+            }`}
+          >
             Previous
           </button>
-          <p>Page 1 of 10</p>
-          <button className="border border-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-100">
+
+          <p>
+            Page {currentPage} of {totalPages} • {filteredRegulations.length} total
+          </p>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className={`border border-gray-300 px-4 py-1.5 rounded-md hover:bg-gray-100 ${
+              currentPage >= totalPages ? "opacity-50 cursor-not-allowed hover:bg-transparent" : ""
+            }`}
+          >
             Next
           </button>
         </div>
+</div>
     </div>
   );
 }

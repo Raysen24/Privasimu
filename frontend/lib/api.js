@@ -255,6 +255,8 @@ export const api = {
         if (filters.status) params.append('status', filters.status);
         if (filters.category) params.append('category', filters.category);
         if (filters.userId) params.append('userId', filters.userId);
+        if (filters.page) params.append('page', String(filters.page));
+        if (filters.limit) params.append('limit', String(filters.limit));
         
         const response = await apiClient.get(`/regulations?${params.toString()}`);
         if (response.data.success) {
