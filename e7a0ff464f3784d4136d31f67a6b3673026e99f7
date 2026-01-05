@@ -1,0 +1,19 @@
+[33m74f3339[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/feature-archive[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mfeature-archive[m[33m)[m Fix Admin View and Edit Regulation Buttons
+[33ma24c10f[m Fix Deny and Approve Button
+[33m7a89007[m Adding user id field in regulation details
+[33m8214165[m Fix failed notification
+[33m7e4e065[m Fix failed notification
+[33m9b1d83e[m Fix Firebase Admin private_key newline formatting on Vercel
+[33m0f5555a[m Merge pull request #3 from Raysen24/admin-fix-dashboard-v3
+[33me7a0ff4[m Fix admin dashboard + sidebar navigation
+[33m9a6e919[m Modified admin and reviewer roles
+[33m8acc6ad[m Set cron to daily (Hobby compatible)
+[33ma4a014e[m Fix Vercel catch-all routing for /api/*
+[33mca9ace7[m Add GET /api/deadlines/check for Vercel Cron
+[33m557f61a[m Enable Vercel Cron for deadline checks
+[33m5096b7b[m Enable Vercel Cron for deadline checks
+[33mb16b4dc[m Enable Vercel Cron for deadline checks
+[33mb51b550[m Tells Vercel: “use Node serverless function from backend/api/[...path].js and route all /api/* to it”
+[33mf934040[m Prepare backend for Vercel (serverless entry + env-based Firebase Admin)
+[33mca44257[m[33m ([m[1;31morigin/feature/frontend-backend-integration-v3[m[33m, [m[1;32mfeature/frontend-backend-integration-v3[m[33m)[m Fixing edit page data components consistency
+[33mb1341b1[m Initial project state with frontend-backend integration

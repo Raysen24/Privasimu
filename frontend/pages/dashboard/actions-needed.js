@@ -159,11 +159,14 @@ const ActionsNeeded = () => {
     );
   };
 
-  const openInAdminDashboard = (regulation, mode) => {
-    router.push({
-      pathname: '/dashboard/admin',
-      query: { id: regulation.id, mode, from: 'actions-needed' }
-    });
+  const openRegulation = (regulation, mode) => {
+    // Route to the shared pages so View/Edit behave the same no matter where the user clicks.
+    if (mode === 'edit') {
+      router.push({ pathname: '/edit-regulation', query: { id: regulation.id, from: 'actions-needed' } });
+      return;
+    }
+
+    router.push({ pathname: '/view-regulation', query: { id: regulation.id, from: 'actions-needed' } });
   };
 
   if (loading) {
@@ -286,7 +289,7 @@ const ActionsNeeded = () => {
 
                     <td className="px-6 py-4 text-right space-x-3">
                       <button
-                        onClick={() => openInAdminDashboard(r, 'view')}
+                        onClick={() => openRegulation(r, 'view')}
                         className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
                         title="View in Admin dashboard"
                       >
@@ -310,7 +313,7 @@ const ActionsNeeded = () => {
                         
                         return (
                           <button
-                            onClick={() => openInAdminDashboard(r, 'edit')}
+                            onClick={() => openRegulation(r, 'edit')}
                             className="text-sm font-medium text-orange-600 hover:text-orange-800 hover:underline"
                             title="Edit in Admin dashboard"
                           >

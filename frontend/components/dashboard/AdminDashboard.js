@@ -63,7 +63,8 @@ const AdminDashboard = () => {
       setLoading(true);
       await Promise.all([fetchRegulations(), fetchReviewers()]);
     } catch (e) {
-      toast.error('Failed to load admin data');
+      console.error('Admin dashboard load failed:', e);
+      toast.error(`Failed to load admin data: ${e?.message || e}`);
     } finally {
       setLoading(false);
     }
@@ -157,15 +158,13 @@ const AdminDashboard = () => {
      ACTION HANDLERS
   ----------------------------- */
   const openView = (r) => {
-    setSelectedRegulation(r);
-    setDetailMode('view');
-    setAdminNotes('');
+    // Use the shared View page (same theme) to avoid the blank in-dashboard detail view.
+    router.push({ pathname: '/view-regulation', query: { id: r.id, from: 'admin-dashboard' } });
   };
 
   const openEdit = (r) => {
-    setSelectedRegulation(r);
-    setDetailMode('edit');
-    setAdminNotes(r.adminNotes || '');
+    // Use the shared Edit page so Dashboard and Actions Needed behave identically.
+    router.push({ pathname: '/edit-regulation', query: { id: r.id, from: 'admin-dashboard' } });
   };
 
   const handleAssignReviewer = async () => {
