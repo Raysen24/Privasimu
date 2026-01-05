@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { useRegulationStore } from "../store/regulationStore";
 import { useSearch } from "../contexts/SearchContext";
 import { formatDate, calculateRemainingTime, getRegulationDeadline, parseDate, isOverdue, isPublished } from "../lib/dateUtils";
+import { downloadRegulationPdf } from "../lib/regulationPdf";
 
 export default function Regulations() {
   const router = useRouter();
@@ -498,12 +499,13 @@ export default function Regulations() {
                 <th className="px-6 py-3">Remaining Time</th>
                 <th className="px-6 py-3">Feedback</th>
                 <th className="px-6 py-3">Actions</th>
+                <th className="px-6 py-3">Download</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-6 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-6 text-center text-gray-500">
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
                       Loading regulations...
@@ -616,12 +618,28 @@ export default function Regulations() {
                     <td className="px-6 py-3">
                       {getActionButtons(r)}
                     </td>
+                    <td className="px-6 py-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await downloadRegulationPdf(r.id, r);
+                          } catch (e) {
+                            console.error(e);
+                            alert("Failed to download PDF. Please try again.");
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                      >
+                        Download
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="7"
+                    colSpan="8"
                     className="px-6 py-6 text-center text-gray-500 italic"
                   >
                     {error ? "Error loading regulations" : "No regulations found."}
@@ -659,6 +677,5 @@ export default function Regulations() {
           </button>
         </div>
 </div>
-  
   );
 }

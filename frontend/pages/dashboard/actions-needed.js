@@ -6,6 +6,7 @@ import { db } from '../../lib/firebase';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
+import { downloadRegulationPdf } from '../../lib/regulationPdf';
 
 const normalizeStatus = (status) => {
   return String(status || '')
@@ -211,17 +212,13 @@ const ActionsNeeded = () => {
 
             <tbody className="divide-y divide-gray-200">
               {paginatedData.map((r) => {
-                // Download details (debug / export helper)
-                const handleDownload = () => {
-                  const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `regulation-${r.id || 'details'}.json`;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  URL.revokeObjectURL(url);
+                const handleDownload = async () => {
+                  try {
+                    await downloadRegulationPdf(r.id, r);
+                  } catch (e) {
+                    console.error(e);
+                    toast.error('Failed to download PDF. Please try again.');
+                  }
                 };
 
                 // Deadline (revisionDeadline for Needs Revision)
@@ -325,7 +322,7 @@ const ActionsNeeded = () => {
                       <button
                         onClick={handleDownload}
                         className="text-green-600 hover:text-green-800 text-sm ml-2"
-                        title="Download details"
+                        title="Download PDF"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

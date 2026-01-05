@@ -6,6 +6,7 @@ import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestor
 import { db } from '../../lib/firebase';
 import { format } from 'date-fns';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { downloadRegulationPdf } from '../../lib/regulationPdf';
 
 // Icons
 const FileText = () => (
@@ -292,6 +293,9 @@ export default function EmployeeDashboard() {
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {regulations.some(r => r.status === 'Needs Revision') ? 'Revision Due' : 'Deadline'}
                 </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Download
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -331,11 +335,27 @@ export default function EmployeeDashboard() {
                       return 'No deadline';
                     })()}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await downloadRegulationPdf(regulation.id, regulation);
+                        } catch (e) {
+                          console.error(e);
+                          alert("Failed to download PDF. Please try again.");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                    >
+                      Download
+                    </button>
+                  </td>
                 </tr>
               ))}
               {filteredRegulations.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                     {searchTerm 
                       ? 'No regulations found matching your search.' 
                       : 'No regulations found. Create your first regulation to get started.'}

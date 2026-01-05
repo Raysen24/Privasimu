@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 import * as XLSX from "xlsx";
 import useReviewerRegulations from "../../hooks/useReviewerRegulations";
 import { useSearch } from "../../contexts/SearchContext";
+import { downloadRegulationPdf } from "../../lib/regulationPdf";
 
 const StatusPill = ({ bucket, label }) => {
   const cls =
@@ -239,12 +240,13 @@ export default function ReviewerRegulationsList() {
                 <th className="px-6 py-3">Deadline</th>
                 <th className="px-6 py-3">Feedback</th>
                 <th className="px-6 py-3">Action</th>
+                <th className="px-6 py-3">Download</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">
                     No results.
                   </td>
                 </tr>
@@ -341,6 +343,22 @@ export default function ReviewerRegulationsList() {
                         ) : (
                           <span className="text-sm font-medium text-gray-400">{a.label}</span>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await downloadRegulationPdf(r.id, r);
+                            } catch (e) {
+                              console.error(e);
+                              alert("Failed to download PDF. Please try again.");
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                        >
+                          Download
+                        </button>
                       </td>
                     </tr>
                   );

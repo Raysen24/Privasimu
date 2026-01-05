@@ -5,6 +5,7 @@ import { useSearch } from "../contexts/SearchContext";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import { formatDate, calculateRemainingTime, getRegulationDeadline, parseDate, isOverdue, isPublished } from "../lib/dateUtils";
+import { downloadRegulationPdf } from "../lib/regulationPdf";
 
 export default function Reporting() {
   const { searchTerm } = useSearch();
@@ -295,13 +296,14 @@ export default function Reporting() {
               <th className="px-4 py-3">Deadline</th>
               <th className="px-4 py-3">Remaining</th>
               <th className="px-4 py-3">Version</th>
+              <th className="px-4 py-3">Download</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="px-4 py-6 text-center text-gray-500"
                 >
                   <div className="flex items-center justify-center">
@@ -355,13 +357,29 @@ export default function Reporting() {
                       {remainingStr}
                     </td>
                     <td className="px-4 py-3">{r.version}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await downloadRegulationPdf(r.id, r);
+                          } catch (e) {
+                            console.error(e);
+                            alert("Failed to download PDF. Please try again.");
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-md text-xs font-medium border border-gray-300 bg-white hover:bg-gray-50"
+                      >
+                        Download
+                      </button>
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
                 <td
-                  colSpan="7"
+                  colSpan="8"
                   className="px-4 py-6 text-center text-gray-500 italic"
                 >
                   No regulations found for the selected filters.
