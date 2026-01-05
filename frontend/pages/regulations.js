@@ -659,6 +659,6 @@ export default function Regulations() {
           </button>
         </div>
 </div>
-    </div>
+  
   );
 }
