@@ -380,7 +380,9 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className=\"flex justify-center items-center h-64\">\n        <div className=\"animate-spin h-12 w-12 border-t-2 border-blue-500 rounded-full\" />\n      </div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin h-12 w-12 border-t-2 border-blue-500 rounded-full" />
+      </div>
     );
   }
 
@@ -393,55 +395,55 @@ const AdminDashboard = () => {
       null;
 
     return (
-      <div className=\"container mx-auto px-4 py-8\">
-        <div className=\"flex items-start justify-between mb-6\">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-start justify-between mb-6">
           <div>
             <button
               onClick={closeDetail}
-              className=\"text-sm text-gray-600 hover:text-gray-900 hover:underline mb-2\"
+              className="text-sm text-gray-600 hover:text-gray-900 hover:underline mb-2"
             >
               ← Back to Dashboard
             </button>
-            <h1 className=\"text-2xl font-bold\">{selectedRegulation.title || 'Regulation'}</h1>
-            <div className=\"mt-2 flex items-center gap-2\">
+            <h1 className="text-2xl font-bold">{selectedRegulation.title || 'Regulation'}</h1>
+            <div className="mt-2 flex items-center gap-2">
               {getStatusBadge(selectedRegulation.status)}
               {createdById && (
-                <span className=\"text-xs text-gray-500\">
-                  Created by: <span className=\"font-medium\">{createdById}</span>
+                <span className="text-xs text-gray-500">
+                  Created by: <span className="font-medium">{createdById}</span>
                 </span>
               )}
             </div>
           </div>
 
-          <div className=\"flex items-center gap-3\">
+          <div className="flex items-center gap-3">
             <button
               onClick={closeDetail}
-              className=\"px-4 py-2 border rounded text-sm hover:bg-gray-50\"
+              className="px-4 py-2 border rounded text-sm hover:bg-gray-50"
             >
               Close
             </button>
           </div>
         </div>
 
-        <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-6\">
-          <div className=\"lg:col-span-2 space-y-6\">
-            <div className=\"bg-white border rounded-lg p-6\">
-              <h2 className=\"text-lg font-semibold mb-4\">Regulation Details</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">Regulation Details</h2>
 
-              <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4 text-sm\">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className=\"text-gray-500\">Category</p>
-                  <p className=\"font-medium\">{selectedRegulation.category || 'N/A'}</p>
+                  <p className="text-gray-500">Category</p>
+                  <p className="font-medium">{selectedRegulation.category || 'N/A'}</p>
                 </div>
 
                 <div>
-                  <p className=\"text-gray-500\">Deadline</p>
-                  <p className=\"font-medium\">{formatDate(selectedRegulation.deadline)}</p>
+                  <p className="text-gray-500">Deadline</p>
+                  <p className="font-medium">{formatDate(selectedRegulation.deadline)}</p>
                 </div>
 
                 <div>
-                  <p className=\"text-gray-500\">Revision Deadline</p>
-                  <p className=\"font-medium\">
+                  <p className="text-gray-500">Revision Deadline</p>
+                  <p className="font-medium">
                     {selectedRegulation.revisionDeadline
                       ? formatDateTime(selectedRegulation.revisionDeadline)
                       : '—'}
@@ -449,8 +451,8 @@ const AdminDashboard = () => {
                 </div>
 
                 <div>
-                  <p className=\"text-gray-500\">Assigned Reviewer</p>
-                  <p className=\"font-medium\">
+                  <p className="text-gray-500">Assigned Reviewer</p>
+                  <p className="font-medium">
                     {selectedRegulation.assignedReviewerName ||
                       selectedRegulation.assignedReviewer ||
                       '—'}
@@ -458,36 +460,36 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <div className=\"mt-6\">
-                <p className=\"text-gray-500 text-sm mb-1\">Description</p>
+              <div className="mt-6">
+                <p className="text-gray-500 text-sm mb-1">Description</p>
                 {selectedRegulation.description ? (
                   <div
-                    className=\"text-gray-900\"
+                    className="text-gray-900"
                     style={{ wordWrap: 'break-word' }}
                     dangerouslySetInnerHTML={{ __html: selectedRegulation.description }}
                   />
                 ) : (
-                  <p className=\"text-gray-500\">N/A</p>
+                  <p className="text-gray-500">N/A</p>
                 )}
               </div>
 
               {(selectedRegulation.feedback || selectedRegulation.reviewerFeedback) && (
-                <div className=\"mt-6\">
-                  <p className=\"text-gray-700 text-sm font-semibold mb-1\">Reviewer Feedback</p>
-                  <div className=\"bg-blue-50 border border-blue-200 rounded-lg p-4\">
-                    <p className=\"text-gray-900 whitespace-pre-wrap\">
+                <div className="mt-6">
+                  <p className="text-gray-700 text-sm font-semibold mb-1">Reviewer Feedback</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-gray-900 whitespace-pre-wrap">
                       {selectedRegulation.feedback || selectedRegulation.reviewerFeedback || 'N/A'}
                     </p>
                     {(selectedRegulation.reviewedBy || selectedRegulation.reviewedById) && (
-                      <p className=\"text-xs text-gray-500 mt-2\">
+                      <p className="text-xs text-gray-500 mt-2">
                         Reviewed by:{' '}
-                        <span className=\"font-medium\">
+                        <span className="font-medium">
                           {selectedRegulation.reviewerName ||
                             selectedRegulation.reviewedBy ||
                             selectedRegulation.reviewedById}
                         </span>
                         {selectedRegulation.reviewedAt && (
-                          <span className=\"ml-2\">on {formatDateTime(selectedRegulation.reviewedAt)}</span>
+                          <span className="ml-2">on {formatDateTime(selectedRegulation.reviewedAt)}</span>
                         )}
                       </p>
                     )}
@@ -497,33 +499,33 @@ const AdminDashboard = () => {
 
               {Array.isArray(selectedRegulation.attachments) &&
                 selectedRegulation.attachments.length > 0 && (
-                  <div className=\"mt-6\">
-                    <p className=\"text-gray-700 text-sm font-semibold mb-2\">Attachments</p>
-                    <div className=\"bg-white border border-gray-200 rounded-lg divide-y\">
+                  <div className="mt-6">
+                    <p className="text-gray-700 text-sm font-semibold mb-2">Attachments</p>
+                    <div className="bg-white border border-gray-200 rounded-lg divide-y">
                       {selectedRegulation.attachments.map((attachment, index) => (
                         <div
                           key={`${attachment?.url || 'att'}-${index}`}
-                          className=\"flex items-center justify-between px-4 py-3 text-sm text-gray-700\"
+                          className="flex items-center justify-between px-4 py-3 text-sm text-gray-700"
                         >
-                          <div className=\"min-w-0 pr-3\">
-                            <p className=\"font-medium\">
+                          <div className="min-w-0 pr-3">
+                            <p className="font-medium">
                               {attachment?.name || `Attachment ${index + 1}`}
                             </p>
-                            <p className=\"text-xs text-gray-500 truncate\">
+                            <p className="text-xs text-gray-500 truncate">
                               {attachment?.url || ''}
                             </p>
                           </div>
                           {attachment?.url ? (
                             <a
                               href={attachment.url}
-                              target=\"_blank\"
-                              rel=\"noopener noreferrer\"
-                              className=\"text-blue-600 hover:underline text-sm font-medium\"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm font-medium"
                             >
                               Open
                             </a>
                           ) : (
-                            <span className=\"text-gray-400 text-sm\">—</span>
+                            <span className="text-gray-400 text-sm">—</span>
                           )}
                         </div>
                       ))}
@@ -532,13 +534,13 @@ const AdminDashboard = () => {
                 )}
             </div>
 
-            <div className=\"bg-white border rounded-lg p-6\">
-              <h2 className=\"text-lg font-semibold mb-4\">Timeline</h2>
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">Timeline</h2>
 
-              <div className=\"space-y-2 text-sm text-gray-700\">
+              <div className="space-y-2 text-sm text-gray-700">
                 {(selectedRegulation.createdAt || selectedRegulation.submittedAt) && (
                   <p>
-                    <span className=\"font-medium\">
+                    <span className="font-medium">
                       {selectedRegulation.submittedAt ? 'Submitted' : 'Created'}:
                     </span>{' '}
                     {formatDateTime(selectedRegulation.submittedAt || selectedRegulation.createdAt)}
@@ -546,54 +548,54 @@ const AdminDashboard = () => {
                 )}
                 {selectedRegulation.reviewedAt && (
                   <p>
-                    <span className=\"font-medium\">Reviewed:</span>{' '}
+                    <span className="font-medium">Reviewed:</span>{' '}
                     {formatDateTime(selectedRegulation.reviewedAt)}
                   </p>
                 )}
                 {selectedRegulation.deniedAt && (
                   <p>
-                    <span className=\"font-medium\">Revision Requested:</span>{' '}
+                    <span className="font-medium">Revision Requested:</span>{' '}
                     {formatDateTime(selectedRegulation.deniedAt)}
                   </p>
                 )}
                 {selectedRegulation.publishedAt && (
                   <p>
-                    <span className=\"font-medium\">Published:</span>{' '}
+                    <span className="font-medium">Published:</span>{' '}
                     {formatDateTime(selectedRegulation.publishedAt)}
                   </p>
                 )}
               </div>
 
-              <div className=\"border-t mt-4 pt-4\">
-                <h3 className=\"text-sm font-semibold text-gray-700 mb-3\">Progress Tracker</h3>
+              <div className="border-t mt-4 pt-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">Progress Tracker</h3>
 
                 {historyItems.length === 0 ? (
-                  <p className=\"text-sm text-gray-500\">No history recorded yet.</p>
+                  <p className="text-sm text-gray-500">No history recorded yet.</p>
                 ) : (
-                  <ol className=\"space-y-3\">
+                  <ol className="space-y-3">
                     {historyItems.map((h, idx) => (
-                      <li key={`${h?.action || 'h'}-${idx}`} className=\"text-sm\">
-                        <div className=\"flex flex-wrap items-center gap-x-2 gap-y-1\">
-                          <span className=\"font-semibold text-gray-800\">{h?.action || 'action'}</span>
-                          <span className=\"text-gray-500\">•</span>
-                          <span className=\"text-gray-600\">{formatDateTime(h?.timestamp)}</span>
+                      <li key={`${h?.action || 'h'}-${idx}`} className="text-sm">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                          <span className="font-semibold text-gray-800">{h?.action || 'action'}</span>
+                          <span className="text-gray-500">•</span>
+                          <span className="text-gray-600">{formatDateTime(h?.timestamp)}</span>
                           {h?.actorRole && (
                             <>
-                              <span className=\"text-gray-500\">•</span>
-                              <span className=\"text-gray-600\">{h.actorRole}</span>
+                              <span className="text-gray-500">•</span>
+                              <span className="text-gray-600">{h.actorRole}</span>
                             </>
                           )}
                           {h?.actorId && (
                             <>
-                              <span className=\"text-gray-500\">•</span>
-                              <span className=\"text-gray-600\">
-                                id: <span className=\"font-medium\">{h.actorId}</span>
+                              <span className="text-gray-500">•</span>
+                              <span className="text-gray-600">
+                                id: <span className="font-medium">{h.actorId}</span>
                               </span>
                             </>
                           )}
                         </div>
                         {h?.note ? (
-                          <p className=\"text-gray-600 mt-1 whitespace-pre-wrap\">{h.note}</p>
+                          <p className="text-gray-600 mt-1 whitespace-pre-wrap">{h.note}</p>
                         ) : null}
                       </li>
                     ))}
@@ -603,20 +605,20 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className=\"space-y-6\">
-            <div className=\"bg-white border rounded-lg p-6\">
-              <h2 className=\"text-lg font-semibold mb-4\">Admin Actions</h2>
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">Admin Actions</h2>
 
               {(statusKey === 'draft' || statusKey === 'pending_approval') && (
-                <div className=\"mb-5\">
-                  <label className=\"text-sm font-semibold text-gray-700\">Assign Reviewer</label>
-                  <div className=\"mt-2 flex gap-2\">
+                <div className="mb-5">
+                  <label className="text-sm font-semibold text-gray-700">Assign Reviewer</label>
+                  <div className="mt-2 flex gap-2">
                     <select
                       value={selectedReviewer}
                       onChange={(e) => setSelectedReviewer(e.target.value)}
-                      className=\"w-full border rounded px-3 py-2 text-sm\"
+                      className="w-full border rounded px-3 py-2 text-sm"
                     >
-                      <option value=\"\">Select reviewer</option>
+                      <option value="">Select reviewer</option>
                       {reviewers.map((r) => (
                         <option key={r.id} value={r.id}>
                           {r.name || r.email || r.id}
@@ -626,7 +628,7 @@ const AdminDashboard = () => {
                     <button
                       onClick={handleAssignReviewer}
                       disabled={isSubmitting}
-                      className=\"px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50\"
+                      className="px-3 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-50"
                     >
                       Assign
                     </button>
@@ -634,59 +636,59 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              <div className=\"mb-5\">
-                <label className=\"text-sm font-semibold text-gray-700\">Admin Notes</label>
+              <div className="mb-5">
+                <label className="text-sm font-semibold text-gray-700">Admin Notes</label>
                 <textarea
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={4}
-                  className=\"mt-2 w-full border rounded px-3 py-2 text-sm\"
-                  placeholder=\"Add notes (optional)\"
+                  className="mt-2 w-full border rounded px-3 py-2 text-sm"
+                  placeholder="Add notes (optional)"
                 />
               </div>
 
-              <div className=\"mb-5\">
-                <label className=\"text-sm font-semibold text-gray-700\">Revision Deadline</label>
+              <div className="mb-5">
+                <label className="text-sm font-semibold text-gray-700">Revision Deadline</label>
                 <input
-                  type=\"datetime-local\"
+                  type="datetime-local"
                   value={revisionDeadline}
                   onChange={(e) => setRevisionDeadline(e.target.value)}
-                  className=\"mt-2 w-full border rounded px-3 py-2 text-sm\"
+                  className="mt-2 w-full border rounded px-3 py-2 text-sm"
                 />
-                <p className=\"text-xs text-gray-500 mt-1\">Required if you deny / request revision.</p>
+                <p className="text-xs text-gray-500 mt-1">Required if you deny / request revision.</p>
               </div>
 
               {canPublishOrDeny ? (
-                <div className=\"flex flex-col gap-3\">
+                <div className="flex flex-col gap-3">
                   <button
                     onClick={handlePublishAction}
                     disabled={isSubmitting}
-                    className=\"w-full py-2 rounded bg-green-600 text-white font-medium disabled:opacity-50\"
+                    className="w-full py-2 rounded bg-green-600 text-white font-medium disabled:opacity-50"
                   >
                     Publish
                   </button>
                   <button
                     onClick={handleDenyAction}
                     disabled={isSubmitting}
-                    className=\"w-full py-2 rounded bg-red-600 text-white font-medium disabled:opacity-50\"
+                    className="w-full py-2 rounded bg-red-600 text-white font-medium disabled:opacity-50"
                   >
                     Deny / Request Revision
                   </button>
                 </div>
               ) : (
-                <div className=\"text-sm text-gray-600\">
+                <div className="text-sm text-gray-600">
                   <p>
                     Publish/Deny actions are available when status is{' '}
-                    <span className=\"font-medium\">Pending Publish</span>.
+                    <span className="font-medium">Pending Publish</span>.
                   </p>
                 </div>
               )}
             </div>
 
-            <div className=\"bg-white border rounded-lg p-6\">
-              <h2 className=\"text-lg font-semibold mb-2\">Quick Info</h2>
-              <p className=\"text-sm text-gray-600\">
-                Status: <span className=\"font-medium\">{selectedRegulation.status || '—'}</span>
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-2">Quick Info</h2>
+              <p className="text-sm text-gray-600">
+                Status: <span className="font-medium">{selectedRegulation.status || '—'}</span>
               </p>
             </div>
           </div>
@@ -696,65 +698,65 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className=\"container mx-auto px-4 py-8\">
-      <div className=\"mb-8\">
-        <h1 className=\"text-2xl font-bold\">Admin Dashboard</h1>
-        <p className=\"text-gray-500\">Overview of published and rejected regulations</p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <p className="text-gray-500">Overview of published and rejected regulations</p>
       </div>
 
-      <div className=\"bg-white p-6 rounded-lg border mb-8\">
-        <h2 className=\"text-lg font-semibold mb-4\">Regulations Progress (Yearly)</h2>
+      <div className="bg-white p-6 rounded-lg border mb-8">
+        <h2 className="text-lg font-semibold mb-4">Regulations Progress (Yearly)</h2>
 
-        <div className=\"h-72\">
-          <ResponsiveContainer width=\"100%\" height=\"100%\">
+        <div className="h-72">
+          <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray=\"3 3\" />
-              <XAxis dataKey=\"month\" />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
               <YAxis allowDecimals={false} />
               <Tooltip />
               <Legend />
-              <Line type=\"monotone\" dataKey=\"drafts\" stroke=\"#6b7280\" strokeWidth={2} />
-              <Line type=\"monotone\" dataKey=\"submitted\" stroke=\"#3b82f6\" strokeWidth={2} />
-              <Line type=\"monotone\" dataKey=\"published\" stroke=\"#22c55e\" strokeWidth={2} />
-              <Line type=\"monotone\" dataKey=\"rejected\" stroke=\"#ef4444\" strokeWidth={2} />
+              <Line type="monotone" dataKey="drafts" stroke="#6b7280" strokeWidth={2} />
+              <Line type="monotone" dataKey="submitted" stroke="#3b82f6" strokeWidth={2} />
+              <Line type="monotone" dataKey="published" stroke="#22c55e" strokeWidth={2} />
+              <Line type="monotone" dataKey="rejected" stroke="#ef4444" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div className=\"bg-white rounded-lg border\">
-        <div className=\"p-6\">
-          <h2 className=\"text-lg font-semibold\">Regulations</h2>
-          <p className=\"text-sm text-gray-500\">Manage and review all regulations</p>
+      <div className="bg-white rounded-lg border">
+        <div className="p-6">
+          <h2 className="text-lg font-semibold">Regulations</h2>
+          <p className="text-sm text-gray-500">Manage and review all regulations</p>
         </div>
 
-        <div className=\"overflow-x-auto\">
-          <table className=\"min-w-full divide-y divide-gray-200\">
-            <thead className=\"bg-gray-50\">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
               <tr>
-                <th className=\"px-6 py-3 text-left text-xs font-medium text-gray-500\">Title</th>
-                <th className=\"px-6 py-3 text-left text-xs font-medium text-gray-500\">Status</th>
-                <th className=\"px-6 py-3 text-left text-xs font-medium text-gray-500\">Deadline</th>
-                <th className=\"px-6 py-3 text-right text-xs font-medium text-gray-500\">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Title</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Deadline</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
 
-            <tbody className=\"divide-y\">
+            <tbody className="divide-y">
               {regulations.map((r) => (
-                <tr key={r.id} className=\"hover:bg-gray-50\">
-                  <td className=\"px-6 py-4\">{r.title}</td>
-                  <td className=\"px-6 py-4\">{getStatusBadge(r.status)}</td>
-                  <td className=\"px-6 py-4 text-sm text-gray-500\">{formatDate(r.deadline)}</td>
-                  <td className=\"px-6 py-4 text-right space-x-3\">
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">{r.title}</td>
+                  <td className="px-6 py-4">{getStatusBadge(r.status)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{formatDate(r.deadline)}</td>
+                  <td className="px-6 py-4 text-right space-x-3">
                     <button
                       onClick={() => openView(r)}
-                      className=\"text-blue-600 hover:underline text-sm\"
+                      className="text-blue-600 hover:underline text-sm"
                     >
                       View
                     </button>
                     <button
                       onClick={() => openEdit(r)}
-                      className=\"text-orange-600 hover:underline text-sm\"
+                      className="text-orange-600 hover:underline text-sm"
                     >
                       Edit
                     </button>
@@ -763,7 +765,7 @@ const AdminDashboard = () => {
               ))}
               {regulations.length === 0 && (
                 <tr>
-                  <td colSpan={4} className=\"px-6 py-8 text-center text-gray-500\">
+                  <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                     No regulations found.
                   </td>
                 </tr>
